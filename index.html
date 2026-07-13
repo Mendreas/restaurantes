@@ -124,7 +124,7 @@ body.tem-barra{padding-bottom:74px}
 #btnColocarVotacao{background:var(--mostarda);color:var(--branco);border:none;padding:11px 20px;border-radius:8px;font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;white-space:nowrap}
 #btnColocarVotacao:hover{background:#96690F}
 
-/* ---------- Modal criação de votação ---------- */
+/* ---------- Modais ---------- */
 .modal-overlay{position:fixed;inset:0;background:rgba(22,40,60,.55);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
 .modal-overlay[hidden]{display:none}
 .modal-caixa{background:var(--branco);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:24px;box-shadow:var(--sombra)}
@@ -136,13 +136,22 @@ body.tem-barra{padding-bottom:74px}
 .mv-lista-restaurantes ul{margin:6px 0 0 18px}
 .linha-data{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px}
 .linha-data input{padding:9px 10px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.86rem}
-.remover-data{background:none;border:none;color:var(--cinza);font-size:1.2rem;cursor:pointer;padding:4px 8px;line-height:1}
-#mvAddData{background:none;border:1.5px dashed var(--linha);color:var(--cobalto);font:inherit;font-weight:700;font-size:.85rem;padding:9px 12px;border-radius:8px;cursor:pointer;width:100%;margin-bottom:16px}
+.remover-data,.remover-participante{background:none;border:none;color:var(--cinza);font-size:1.2rem;cursor:pointer;padding:4px 8px;line-height:1}
+#mvAddData,#mvAddParticipante{background:none;border:1.5px dashed var(--linha);color:var(--cobalto);font:inherit;font-weight:700;font-size:.85rem;padding:9px 12px;border-radius:8px;cursor:pointer;width:100%;margin-bottom:16px}
+.linha-participante{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.linha-participante input{padding:9px 10px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.86rem}
 .modal-acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
 .btn-secundario{background:var(--branco);border:1.5px solid var(--linha);color:var(--tinta);padding:10px 18px;border-radius:8px;font:inherit;font-weight:700;cursor:pointer}
 .btn-primario{background:var(--cobalto);border:none;color:var(--branco);padding:10px 18px;border-radius:8px;font:inherit;font-weight:700;cursor:pointer}
 .btn-primario:hover{background:var(--cobalto-escuro)}
 .modal-erro{color:#A83232;font-size:.85rem;font-weight:600;margin-top:6px}
+.modal-legenda{font-size:.78rem;color:var(--cinza);margin:-8px 0 12px}
+
+/* Chips de contactos guardados */
+.chips-contactos{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chips-contactos[hidden]{display:none}
+.chip-contacto{background:var(--fundo);border:1.5px solid var(--linha);color:var(--tinta);font:inherit;font-size:.82rem;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer}
+.chip-contacto:hover{border-color:var(--cobalto);color:var(--cobalto)}
 
 /* ---------- Aba Votação ---------- */
 .votacao-wrap{max-width:720px;margin:0 auto;padding:24px}
@@ -168,8 +177,10 @@ body.tem-barra{padding-bottom:74px}
 .opcao-radio{display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--linha);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
 .opcao-radio.marcada{border-color:var(--cobalto);background:#F4F8FC}
 .opcao-radio input{margin-top:3px;flex-shrink:0}
+.opcao-radio .txt{flex:1}
 .opcao-radio .txt strong{display:block;font-size:.92rem;color:var(--tinta)}
 .opcao-radio .txt span{font-size:.78rem;color:var(--cinza)}
+.opcao-radio .txt em{display:block;font-size:.74rem;color:var(--cobalto);font-style:normal;font-weight:600;margin-top:3px}
 .info-data-unica{background:#F4F8FC;border:1.5px solid var(--cobalto);border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:.9rem;color:var(--tinta)}
 .form-voto .campo{margin-bottom:14px}
 #btnEnviarVoto{width:100%;background:var(--mostarda);color:var(--branco);border:none;padding:13px;border-radius:8px;font:inherit;font-weight:700;font-size:.98rem;cursor:pointer;margin-top:14px}
@@ -177,6 +188,9 @@ body.tem-barra{padding-bottom:74px}
 .voto-erro{color:#A83232;font-size:.85rem;font-weight:600;margin-top:8px}
 .confirmacao-voto{background:#EEF6EF;border:1.5px solid var(--verde);border-radius:12px;padding:18px;margin-top:16px;font-size:.9rem;color:var(--tinta)}
 .confirmacao-voto textarea{width:100%;margin-top:10px;padding:10px;border:1px solid var(--linha);border-radius:8px;font:inherit;font-size:.8rem;min-height:110px;background:var(--fundo);color:var(--tinta)}
+
+/* ---------- Modal detalhe do restaurante ---------- */
+.mdr-nota{font-size:.85rem;color:var(--cinza);margin:14px 0 10px}
 
 /* ---------- Responsivo (iPad / telemóvel) ---------- */
 @media (max-width:1000px){
@@ -308,6 +322,10 @@ body.tem-barra{padding-bottom:74px}
       <input id="mvTitulo" type="text" placeholder="ex.: Almoço de equipa GOPLIS">
     </div>
     <div class="campo">
+      <label for="mvNomeOrganizador">O teu nome</label>
+      <input id="mvNomeOrganizador" type="text" placeholder="ex.: Paulo Leal">
+    </div>
+    <div class="campo">
       <label for="mvEmailOrganizador">O teu e-mail (é para aqui que os votos são enviados)</label>
       <input id="mvEmailOrganizador" type="email" placeholder="tu@navportugal.pt">
     </div>
@@ -316,12 +334,32 @@ body.tem-barra{padding-bottom:74px}
     <div id="mvDatas"></div>
     <button id="mvAddData" type="button">+ Adicionar outra data/hora</button>
 
+    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Participantes (opcional)</label>
+    <div class="modal-legenda">Adiciona colegas mesmo que ainda não tenham votado — eles vão ver o nome deles pronto a escolher.</div>
+    <div class="chips-contactos" id="mvParticipantesGuardados" hidden></div>
+    <div id="mvParticipantes"></div>
+    <button id="mvAddParticipante" type="button">+ Adicionar participante</button>
+
     <div id="mvErro" class="modal-erro" hidden></div>
 
     <div class="modal-acoes">
       <button class="btn-secundario" id="mvCancelar" type="button">Cancelar</button>
       <button class="btn-primario" id="mvCriar" type="button">Criar votação</button>
     </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL: DETALHE DO RESTAURANTE ===================== -->
+<div class="modal-overlay" id="modalDetalheRestaurante" hidden>
+  <div class="modal-caixa">
+    <div class="cartao-cabecalho">
+      <h2 id="mdrNome" style="margin-bottom:0"></h2>
+      <button class="btn-secundario" id="mdrFechar" type="button" style="padding:6px 13px">✕</button>
+    </div>
+    <div class="etiquetas" id="mdrEtiquetas"></div>
+    <div class="detalhe" id="mdrDetalhe"></div>
+    <div class="mdr-nota">O OpenStreetMap não tem uma nota numérica de classificação — vê as críticas reais aqui:</div>
+    <div class="acoes" id="mdrAcoes"></div>
   </div>
 </div>
 
@@ -663,7 +701,7 @@ function dadosResumidos(r){
   return {
     id: r.id, nome: r.nome, morada: r.morada, cozinha: r.cozinha,
     tipo: r.tipo, preco: r.preco, telefone: r.telefone, site: r.site,
-    lat: r.lat, lon: r.lon
+    horario: r.horario, lat: r.lat, lon: r.lon
   };
 }
 
@@ -689,6 +727,50 @@ function atualizarBarraSelecao(){
     barra.hidden = true;
     document.body.classList.remove('tem-barra');
   }
+}
+
+// ===================== CONTACTOS GUARDADOS NESTE DISPOSITIVO =====================
+// Guardado localmente no telemóvel de cada pessoa (não é partilhado entre dispositivos).
+// Serve para não ter de reescrever nome/e-mail sempre que volta a votar ou a criar uma votação.
+const CHAVE_CONTACTOS = 'mesaMarcada_contactos_v1';
+const CHAVE_ORGANIZADOR = 'mesaMarcada_organizador_v1';
+
+function obterContactosGuardados(){
+  try{
+    const raw = localStorage.getItem(CHAVE_CONTACTOS);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; } // localStorage indisponível (ex.: pré-visualização) — degrada em silêncio
+}
+
+function guardarContacto(nome, email){
+  if(!nome || !email) return;
+  try{
+    const lista = obterContactosGuardados();
+    const emailNorm = email.trim().toLowerCase();
+    const existente = lista.findIndex(c => c.email.toLowerCase() === emailNorm);
+    if(existente >= 0) lista[existente] = { nome: nome.trim(), email: email.trim() };
+    else lista.push({ nome: nome.trim(), email: email.trim() });
+    localStorage.setItem(CHAVE_CONTACTOS, JSON.stringify(lista.slice(-50)));
+  }catch(e){ /* ignora */ }
+}
+
+function obterOrganizadorGuardado(){
+  try{
+    const raw = localStorage.getItem(CHAVE_ORGANIZADOR);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function guardarOrganizador(nome, email){
+  try{ localStorage.setItem(CHAVE_ORGANIZADOR, JSON.stringify({ nome, email })); }catch(e){ /* ignora */ }
+}
+
+function mesclarContactos(...listas){
+  const mapa = new Map();
+  listas.flat().forEach(c => {
+    if(c && c.nome && c.email) mapa.set(c.email.trim().toLowerCase(), { nome: c.nome, email: c.email });
+  });
+  return [...mapa.values()];
 }
 
 // ===================== CODIFICAÇÃO DO LINK DE VOTAÇÃO =====================
@@ -724,15 +806,47 @@ function linhaDataHTML(data, hora){
   </div>`;
 }
 
+function linhaParticipanteHTML(nome, email){
+  return `<div class="linha-participante">
+    <input type="text" class="mv-part-nome" placeholder="Nome" value="${escapar(nome||'')}">
+    <input type="email" class="mv-part-email" placeholder="email@empresa.pt" value="${escapar(email||'')}">
+    <button type="button" class="remover-participante" aria-label="Remover">✕</button>
+  </div>`;
+}
+
+function adicionarLinhaParticipanteSeNovo(nome, email){
+  const jaExiste = [...$('mvParticipantes').querySelectorAll('.mv-part-email')]
+    .some(inp => inp.value.trim().toLowerCase() === email.trim().toLowerCase());
+  if(jaExiste) return;
+  $('mvParticipantes').insertAdjacentHTML('beforeend', linhaParticipanteHTML(nome, email));
+}
+
+function renderizarChipsContactos(containerId, aoClicar){
+  const contactos = obterContactosGuardados();
+  const el = $(containerId);
+  if(!contactos.length){ el.innerHTML=''; el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = contactos.map(c =>
+    `<button type="button" class="chip-contacto" data-nome="${escapar(c.nome)}" data-email="${escapar(c.email)}">${escapar(c.nome)}</button>`
+  ).join('');
+  el.querySelectorAll('.chip-contacto').forEach(btn =>
+    btn.addEventListener('click', () => aoClicar(btn.dataset.nome, btn.dataset.email))
+  );
+}
+
 function abrirModalVotacao(){
   if(selecionadosMapa.size === 0) return;
 
   $('mvListaRestaurantes').innerHTML = '<strong>Restaurantes selecionados (' + selecionadosMapa.size + ')</strong><ul>' +
     [...selecionadosMapa.values()].map(r => '<li>' + escapar(r.nome) + '</li>').join('') + '</ul>';
 
+  const org = obterOrganizadorGuardado();
   $('mvTitulo').value = '';
-  $('mvEmailOrganizador').value = '';
+  $('mvNomeOrganizador').value = org?.nome || '';
+  $('mvEmailOrganizador').value = org?.email || '';
   $('mvDatas').innerHTML = linhaDataHTML('', '');
+  $('mvParticipantes').innerHTML = '';
+  renderizarChipsContactos('mvParticipantesGuardados', adicionarLinhaParticipanteSeNovo);
   $('mvErro').hidden = true;
 
   $('modalVotacao').hidden = false;
@@ -748,18 +862,30 @@ $('mvDatas').addEventListener('click', ev => {
     if(linhas.length > 1) ev.target.closest('.linha-data').remove();
   }
 });
-
 $('mvAddData').addEventListener('click', () => {
   $('mvDatas').insertAdjacentHTML('beforeend', linhaDataHTML('', ''));
+});
+
+$('mvParticipantes').addEventListener('click', ev => {
+  if(ev.target.classList.contains('remover-participante')) ev.target.closest('.linha-participante').remove();
+});
+$('mvAddParticipante').addEventListener('click', () => {
+  $('mvParticipantes').insertAdjacentHTML('beforeend', linhaParticipanteHTML('', ''));
 });
 
 $('mvCancelar').addEventListener('click', fecharModalVotacao);
 
 $('mvCriar').addEventListener('click', () => {
   const titulo = $('mvTitulo').value.trim();
+  const nomeOrganizador = $('mvNomeOrganizador').value.trim();
   const email = $('mvEmailOrganizador').value.trim();
   const erroEl = $('mvErro');
 
+  if(!nomeOrganizador){
+    erroEl.textContent = 'Falta o teu nome.';
+    erroEl.hidden = false;
+    return;
+  }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     erroEl.textContent = 'Indica um e-mail válido — é para aí que os votos vão chegar.';
     erroEl.hidden = false;
@@ -781,12 +907,27 @@ $('mvCriar').addEventListener('click', () => {
 
   erroEl.hidden = true;
 
+  const participantes = [];
+  $('mvParticipantes').querySelectorAll('.linha-participante').forEach(linha => {
+    const n = linha.querySelector('.mv-part-nome').value.trim();
+    const e = linha.querySelector('.mv-part-email').value.trim();
+    if(n && e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){
+      participantes.push({ nome:n, email:e });
+      guardarContacto(n, e);
+    }
+  });
+
+  guardarOrganizador(nomeOrganizador, email);
+  guardarContacto(nomeOrganizador, email);
+
   votacaoAtual = {
     titulo,
+    organizadorNome: nomeOrganizador,
     organizadorEmail: email,
     criadoEm: new Date().toISOString(),
     restaurantes: [...selecionadosMapa.values()],
-    datas
+    datas,
+    participantesConhecidos: participantes
   };
 
   location.hash = 'v=' + paraBase64Url(votacaoAtual);
@@ -817,6 +958,33 @@ $('btnAbaVotacao').addEventListener('click', () => {
 });
 $('btnColocarVotacao').addEventListener('click', abrirModalVotacao);
 
+// ===================== MODAL: DETALHE DO RESTAURANTE =====================
+function abrirDetalheRestaurante(r){
+  $('mdrNome').textContent = r.nome;
+  $('mdrEtiquetas').innerHTML = [
+    r.cozinha ? '<span class="etiqueta et-cozinha">' + escapar(r.cozinha) + '</span>' : '',
+    '<span class="etiqueta et-tipo">' + NOME_TIPO[r.tipo] + '</span>',
+    '<span class="etiqueta et-preco">' + (r.preco ? '€'.repeat(r.preco) : 'preço s/ info') + '</span>'
+  ].join('');
+
+  const linhas = [];
+  if(r.morada)   linhas.push('<span class="rotulo">Morada:</span> ' + escapar(r.morada));
+  if(r.telefone) linhas.push('<span class="rotulo">Telefone:</span> <a href="tel:' + escapar(r.telefone.replace(/\s/g,'')) + '">' + escapar(r.telefone) + '</a>');
+  if(r.site)     linhas.push('<span class="rotulo">Site:</span> <a href="' + escapar(r.site) + '" target="_blank" rel="noopener">' + escapar(r.site.replace(/^https?:\/\//,'').replace(/\/$/,'')) + '</a>');
+  if(r.horario)  linhas.push('<span class="rotulo">Horário:</span> ' + escapar(r.horario));
+  $('mdrDetalhe').innerHTML = linhas.join('<br>') || '<span class="rotulo">Sem mais detalhes registados no OpenStreetMap.</span>';
+
+  const qGoogle = encodeURIComponent(r.nome + ' restaurante ' + (r.morada || ''));
+  const qTrip   = encodeURIComponent(r.nome + ' ' + (r.morada || ''));
+  $('mdrAcoes').innerHTML = `
+    <a class="a-google" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${qGoogle}">Google Maps · críticas</a>
+    <a class="a-trip" target="_blank" rel="noopener" href="https://www.tripadvisor.pt/Search?q=${qTrip}">TripAdvisor</a>
+  `;
+
+  $('modalDetalheRestaurante').hidden = false;
+}
+$('mdrFechar').addEventListener('click', () => $('modalDetalheRestaurante').hidden = true);
+
 // ===================== ABA VOTAÇÃO: RENDERIZAÇÃO =====================
 function copiarTexto(texto){
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -846,7 +1014,7 @@ function textoConviteCorpo(votacao, link){
   const listaDatas = votacao.datas.map(d => '- ' + formatarDataPT(d.data) + ' às ' + d.hora).join('\n');
   return `Olá!
 
-Foste convidado(a) a escolher o restaurante para: ${votacao.titulo || 'a nossa reunião'}
+${votacao.organizadorNome || 'Um colega'} convidou-te a escolher o restaurante para: ${votacao.titulo || 'a nossa reunião'}
 
 Restaurantes propostos:
 ${listaRest}
@@ -881,11 +1049,12 @@ function renderizarVotacao(){
   const temVariasDatas = votacaoAtual.datas.length > 1;
 
   const blocoRestaurantes = votacaoAtual.restaurantes.map((r,i) => `
-    <label class="opcao-radio" data-grupo="restaurante">
+    <label class="opcao-radio" data-grupo="restaurante" data-i="${i}">
       <input type="radio" name="votoRestaurante" value="${i}" ${i===0?'checked':''}>
       <span class="txt">
         <strong>${escapar(r.nome)}</strong>
         <span>${[r.cozinha, r.morada].filter(Boolean).map(escapar).join(' · ')}</span>
+        <em>Toca para ver morada, contacto e críticas →</em>
       </span>
     </label>`).join('');
 
@@ -919,13 +1088,14 @@ function renderizarVotacao(){
       <h2>Escolhe o restaurante</h2>
       <div class="subtitulo">${votacaoAtual.titulo ? escapar(votacaoAtual.titulo) : 'Vota no restaurante e no dia que preferes.'}</div>
 
-      <h4>Restaurante</h4>
+      <h4>Restaurante <span style="text-transform:none;font-weight:400">(toca no nome para ver detalhes)</span></h4>
       ${blocoRestaurantes}
 
       <h4>Dia${temVariasDatas ? ' — escolhe uma opção' : ''}</h4>
       ${blocoDatas}
 
       <h4>Os teus dados</h4>
+      <div class="chips-contactos" id="votoChipsPessoas" hidden></div>
       <div class="campo">
         <label for="votoNome">O teu nome</label>
         <input type="text" id="votoNome" placeholder="Nome completo">
@@ -942,7 +1112,17 @@ function renderizarVotacao(){
     </div>
   `;
 
-  // Marcar visualmente a opção selecionada
+  // Chips "és um destes?" — participantes pré-registados pelo organizador + contactos guardados neste dispositivo
+  const conhecidos = mesclarContactos(votacaoAtual.participantesConhecidos || [], obterContactosGuardados());
+  const elChips = $('votoChipsPessoas');
+  if(conhecidos.length){
+    elChips.hidden = false;
+    elChips.innerHTML = conhecidos.map(c =>
+      `<button type="button" class="chip-contacto" data-nome="${escapar(c.nome)}" data-email="${escapar(c.email)}">${escapar(c.nome)}</button>`
+    ).join('');
+  }
+
+  // Marcar visualmente a opção de data/restaurante selecionada
   el.querySelectorAll('input[type=radio]').forEach(inp => {
     const marcar = () => {
       el.querySelectorAll(`input[name="${inp.name}"]`).forEach(i2 => i2.closest('.opcao-radio').classList.toggle('marcada', i2.checked));
@@ -951,11 +1131,26 @@ function renderizarVotacao(){
     marcar();
   });
 
-  // Ações (delegação)
-  el.addEventListener('click', onCliqueVotacao);
+  // Ações (delegação) — atribuição direta evita listeners duplicados em re-renderizações
+  el.onclick = onCliqueVotacao;
 }
 
 function onCliqueVotacao(ev){
+  // Clicar numa opção de restaurante abre o modal de detalhe (a seleção do rádio acontece à parte, nativamente)
+  const linhaRest = ev.target.closest('.opcao-radio[data-grupo="restaurante"]');
+  if(linhaRest && votacaoAtual){
+    const i = +linhaRest.dataset.i;
+    if(votacaoAtual.restaurantes[i]) abrirDetalheRestaurante(votacaoAtual.restaurantes[i]);
+  }
+
+  // Chip de contacto conhecido → preenche nome/e-mail
+  const chip = ev.target.closest('#votoChipsPessoas .chip-contacto');
+  if(chip){
+    $('votoNome').value = chip.dataset.nome;
+    $('votoEmail').value = chip.dataset.email;
+    return;
+  }
+
   const alvo = ev.target.closest('[data-acao]');
   if(!alvo) return;
   const acao = alvo.dataset.acao;
@@ -998,6 +1193,7 @@ function onCliqueVotacao(ev){
     }
 
     erroEl.hidden = true;
+    guardarContacto(nome, email); // lembra esta pessoa neste dispositivo para futuras votações
 
     const corpoVoto = `Nome: ${nome}
 E-mail: ${email}
