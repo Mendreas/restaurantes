@@ -146,6 +146,10 @@ header p{font-size:.9rem;opacity:.85}
       <select id="cozinha">
         <option value="">Todas</option>
         <option value="portuguese,regional">Portuguesa</option>
+        <option value="alentejan">Alentejana</option>
+        <option value="madeiran">Madeirense</option>
+        <option value="azorean">Açoreana</option>
+        <option value="algarve">Algarvia</option>
         <option value="seafood,fish">Marisco / Peixe</option>
         <option value="steak_house,grill,barbecue">Grelhados / Carnes</option>
         <option value="italian,pizza,pasta">Italiana / Pizza</option>
@@ -236,7 +240,8 @@ const NOMES_COZINHA = {
   international:'Internacional', fusion:'Fusão', mediterranean:'Mediterrânica',
   asian:'Asiática', american:'Americana', kebab:'Kebab', chicken:'Frango',
   african:'Africana', indonesian:'Indonésia', korean:'Coreana', vietnamese:'Vietnamita',
-  greek:'Grega', turkish:'Turca', lebanese:'Libanesa', coffee_shop:'Café'
+  greek:'Grega', turkish:'Turca', lebanese:'Libanesa', coffee_shop:'Café',
+  alentejan:'Alentejana', madeiran:'Madeirense', azorean:'Açoreana', algarve:'Algarvia'
 };
 
 function cozinhaLegivel(tag){
@@ -265,6 +270,19 @@ function nivelPreco(tags){
   if(/€€|\$\$|moderate|2/.test(p)) return 2;
   if(/€|\$|cheap|inexpensive|1/.test(p)) return 1;
   return null; // sem informação
+}
+
+// Cozinhas regionais portuguesas: o OpenStreetMap raramente as distingue na tag
+// "cuisine", por isso procuramos também estas palavras no nome do restaurante.
+const REGIONAL_PT = {
+  alentejan: ['alentejana','alentejano','alentejo'],
+  madeiran: ['madeirense','madeira'],
+  azorean: ['acoriana','acoreana','acores','azores'],
+  algarve: ['algarvia','algarvio','algarve']
+};
+
+function normalizar(t){
+  return (t || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 }
 
 function morada(tags){
@@ -362,6 +380,7 @@ async function pesquisar(){
         return {
           id: e.id, lat, lon, tags: e.tags,
           nome: e.tags.name,
+          nomeNorm: normalizar(e.tags.name),
           cozinhaRaw: (e.tags.cuisine || '').toLowerCase(),
           cozinha: cozinhaLegivel(e.tags.cuisine),
           tipo: classificarTipo(e.tags),
@@ -383,7 +402,11 @@ async function pesquisar(){
     let filtrados = resultados;
     if(fCozinha){
       const alvos = fCozinha.split(',');
-      filtrados = filtrados.filter(r => alvos.some(a => r.cozinhaRaw.includes(a)));
+      filtrados = filtrados.filter(r => {
+        const porTag = alvos.some(a => r.cozinhaRaw.includes(a));
+        const porNome = alvos.some(a => REGIONAL_PT[a] && REGIONAL_PT[a].some(k => r.nomeNorm.includes(k)));
+        return porTag || porNome;
+      });
     }
     if(fTipo) filtrados = filtrados.filter(r => r.tipo === fTipo);
     if(fPreco) filtrados = filtrados.filter(r => r.preco === null || r.preco <= fPreco);
