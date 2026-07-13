@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesa Marcada · Procura de Restaurantes</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cobalto:#1D4E89;
+  --cobalto-escuro:#14395F;
+  --tinta:#16283C;
+  --branco:#FFFFFF;
+  --fundo:#F4F6F8;
+  --linha:#D8DFE6;
+  --mostarda:#B07C1F;
+  --verde:#2E7D4F;
+  --cinza:#5C6B7A;
+  --sombra:0 2px 8px rgba(22,40,60,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Public Sans',system-ui,sans-serif;background:var(--fundo);color:var(--tinta);min-height:100vh}
+
+/* ---------- Cabeçalho com padrão azulejo ---------- */
+header{
+  background:var(--cobalto);
+  color:var(--branco);
+  padding:20px 24px 18px;
+  position:relative;
+  overflow:hidden;
+}
+header::before{
+  content:"";
+  position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23FFFFFF' stroke-opacity='0.13' stroke-width='1.5'%3E%3Cpath d='M24 4 44 24 24 44 4 24Z'/%3E%3Ccircle cx='24' cy='24' r='6'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:48px 48px;
+}
+header .inner{position:relative;max-width:1280px;margin:0 auto;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+header h1{font-family:'Fraunces',serif;font-weight:700;font-size:1.7rem;letter-spacing:.3px}
+header p{font-size:.9rem;opacity:.85}
+
+/* ---------- Barra de filtros ---------- */
+.filtros{
+  background:var(--branco);
+  border-bottom:1px solid var(--linha);
+  padding:16px 24px;
+}
+.filtros .inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1.4fr 1.4fr 1fr auto;gap:12px;align-items:end}
+.campo label{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:5px}
+.campo input,.campo select{
+  width:100%;padding:10px 12px;border:1.5px solid var(--linha);border-radius:8px;
+  font:inherit;font-size:.92rem;background:var(--branco);color:var(--tinta);
+}
+.campo input:focus,.campo select:focus{outline:2px solid var(--cobalto);outline-offset:1px;border-color:var(--cobalto)}
+#btnProcurar{
+  padding:11px 26px;border:none;border-radius:8px;background:var(--cobalto);color:var(--branco);
+  font:inherit;font-size:.95rem;font-weight:700;cursor:pointer;white-space:nowrap;
+}
+#btnProcurar:hover{background:var(--cobalto-escuro)}
+#btnProcurar:disabled{background:var(--cinza);cursor:wait}
+
+/* ---------- Estado / mensagens ---------- */
+#estado{max-width:1280px;margin:14px auto 0;padding:0 24px;font-size:.9rem;color:var(--cinza)}
+#estado .erro{color:#A83232;font-weight:600}
+#estado .aviso{background:#FFF6E4;border:1px solid #EBD9A8;border-radius:8px;padding:10px 14px;display:inline-block}
+
+/* ---------- Corpo: lista + mapa ---------- */
+.corpo{max-width:1280px;margin:16px auto 40px;padding:0 24px;display:grid;grid-template-columns:440px 1fr;gap:18px;align-items:start}
+#mapa{height:78vh;min-height:420px;border-radius:12px;border:1px solid var(--linha);box-shadow:var(--sombra);position:sticky;top:12px;z-index:1}
+#lista{display:flex;flex-direction:column;gap:12px;max-height:78vh;overflow-y:auto;padding-right:4px}
+
+.cartao{
+  background:var(--branco);border:1px solid var(--linha);border-radius:12px;
+  padding:16px 18px;box-shadow:var(--sombra);cursor:pointer;transition:border-color .15s;
+}
+.cartao:hover{border-color:var(--cobalto)}
+.cartao.ativo{border:2px solid var(--cobalto)}
+.cartao h3{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;color:var(--cobalto-escuro);margin-bottom:6px}
+.etiquetas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.etiqueta{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.02em}
+.et-cozinha{background:#E4EDF7;color:var(--cobalto-escuro)}
+.et-tipo{background:#EEF3EE;color:var(--verde)}
+.et-preco{background:#FAF1DC;color:var(--mostarda)}
+.et-dist{background:#F0F0F2;color:var(--cinza)}
+.detalhe{font-size:.88rem;line-height:1.55;color:var(--tinta)}
+.detalhe .rotulo{color:var(--cinza);font-weight:600}
+.detalhe a{color:var(--cobalto);text-decoration:none;font-weight:600}
+.detalhe a:hover{text-decoration:underline}
+.acoes{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.acoes a{
+  flex:1;min-width:120px;text-align:center;font-size:.82rem;font-weight:700;
+  padding:8px 10px;border-radius:8px;text-decoration:none;
+}
+.a-google{background:var(--cobalto);color:var(--branco)}
+.a-trip{background:var(--verde);color:var(--branco)}
+.a-google:hover{background:var(--cobalto-escuro)}
+.a-trip:hover{background:#215F3B}
+
+.vazio{background:var(--branco);border:1px dashed var(--linha);border-radius:12px;padding:40px 20px;text-align:center;color:var(--cinza);font-size:.95rem}
+
+/* ---------- Marcador azulejo no mapa ---------- */
+.marcador{width:22px;height:22px;background:var(--cobalto);transform:rotate(45deg);border:2.5px solid var(--branco);border-radius:4px;box-shadow:0 1px 5px rgba(0,0,0,.4)}
+.marcador.ativo{background:var(--mostarda)}
+.leaflet-popup-content{font-family:'Public Sans',sans-serif;font-size:.88rem}
+.leaflet-popup-content b{font-family:'Fraunces',serif;font-size:1rem;color:var(--cobalto-escuro)}
+
+/* ---------- Responsivo (iPad / telemóvel) ---------- */
+@media (max-width:1000px){
+  .filtros .inner{grid-template-columns:1fr 1fr;gap:10px}
+  #btnProcurar{grid-column:1 / -1}
+  .corpo{grid-template-columns:1fr}
+  #mapa{position:static;height:45vh;order:-1}
+  #lista{max-height:none;overflow:visible}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <h1>Mesa Marcada</h1>
+    <p>Encontrar o restaurante certo para a reunião — dados OpenStreetMap</p>
+  </div>
+</header>
+
+<div class="filtros">
+  <div class="inner">
+    <div class="campo">
+      <label for="localidade">Localidade (cidade ou vila)</label>
+      <input id="localidade" type="text" placeholder="ex.: Lisboa, Sintra, Cascais…" value="">
+    </div>
+    <div class="campo">
+      <label for="raio">Raio de busca</label>
+      <select id="raio">
+        <option value="500">500 m</option>
+        <option value="1000">1 km</option>
+        <option value="2000" selected>2 km</option>
+        <option value="5000">5 km</option>
+        <option value="10000">10 km</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="cozinha">Tipo de comida</label>
+      <select id="cozinha">
+        <option value="">Todas</option>
+        <option value="portuguese,regional">Portuguesa</option>
+        <option value="seafood,fish">Marisco / Peixe</option>
+        <option value="steak_house,grill,barbecue">Grelhados / Carnes</option>
+        <option value="italian,pizza,pasta">Italiana / Pizza</option>
+        <option value="japanese,sushi">Japonesa / Sushi</option>
+        <option value="indian">Indiana</option>
+        <option value="chinese">Chinesa</option>
+        <option value="thai">Tailandesa</option>
+        <option value="mexican">Mexicana</option>
+        <option value="brazilian">Brasileira</option>
+        <option value="spanish,tapas">Espanhola / Tapas</option>
+        <option value="french">Francesa</option>
+        <option value="vegetarian,vegan">Vegetariana / Vegan</option>
+        <option value="burger">Hambúrgueres</option>
+        <option value="international,fusion">Internacional / Fusão</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="tipo">Tipo de restaurante</label>
+      <select id="tipo">
+        <option value="">Todos</option>
+        <option value="tasca">Tasca / Taberna / Casa de pasto</option>
+        <option value="restaurante">Restaurante</option>
+        <option value="fino">Fine dining / Gourmet</option>
+        <option value="rapido">Comida rápida</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="preco">Preço máximo</label>
+      <select id="preco">
+        <option value="">Qualquer</option>
+        <option value="1">€ (económico)</option>
+        <option value="2">€€ (moderado)</option>
+        <option value="3">€€€ (elevado)</option>
+      </select>
+    </div>
+    <button id="btnProcurar">Procurar</button>
+  </div>
+</div>
+
+<div id="estado"></div>
+
+<div class="corpo">
+  <div id="lista">
+    <div class="vazio">Indica a localidade e carrega em <b>Procurar</b>.<br>Os resultados aparecem aqui e no mapa.</div>
+  </div>
+  <div id="mapa"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+"use strict";
+
+// ---------------- Mapa ----------------
+const mapa = L.map('mapa').setView([39.5, -8.0], 7); // Portugal
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap'
+}).addTo(mapa);
+
+let marcadores = [];
+let circuloRaio = null;
+let resultados = [];
+
+// ---------------- Utilidades ----------------
+const $ = id => document.getElementById(id);
+
+function distanciaKm(lat1, lon1, lat2, lon2){
+  const R = 6371, rad = Math.PI/180;
+  const dLat = (lat2-lat1)*rad, dLon = (lon2-lon1)*rad;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function escapar(t){
+  return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function estado(html){ $('estado').innerHTML = html; }
+
+// Nomes de cozinha OSM → português
+const NOMES_COZINHA = {
+  portuguese:'Portuguesa', regional:'Regional', seafood:'Marisco', fish:'Peixe',
+  steak_house:'Grelhados', grill:'Grelhados', barbecue:'Churrasco',
+  italian:'Italiana', pizza:'Pizza', pasta:'Massas',
+  japanese:'Japonesa', sushi:'Sushi', indian:'Indiana', chinese:'Chinesa',
+  thai:'Tailandesa', mexican:'Mexicana', brazilian:'Brasileira',
+  spanish:'Espanhola', tapas:'Tapas', french:'Francesa',
+  vegetarian:'Vegetariana', vegan:'Vegan', burger:'Hambúrgueres',
+  international:'Internacional', fusion:'Fusão', mediterranean:'Mediterrânica',
+  asian:'Asiática', american:'Americana', kebab:'Kebab', chicken:'Frango',
+  african:'Africana', indonesian:'Indonésia', korean:'Coreana', vietnamese:'Vietnamita',
+  greek:'Grega', turkish:'Turca', lebanese:'Libanesa', coffee_shop:'Café'
+};
+
+function cozinhaLegivel(tag){
+  if(!tag) return null;
+  return tag.split(';').map(c => {
+    c = c.trim().toLowerCase();
+    return NOMES_COZINHA[c] || (c.charAt(0).toUpperCase() + c.slice(1).replace(/_/g,' '));
+  }).join(' · ');
+}
+
+// Classificar tipo de restaurante (heurística com tags e nome)
+function classificarTipo(tags){
+  const nome = (tags.name || '').toLowerCase();
+  if(tags.amenity === 'fast_food') return 'rapido';
+  if(/tasca|taberna|casa de pasto|adega|tasquinha/.test(nome)) return 'tasca';
+  if(tags.stars || tags.michelin || /gourmet|fine dining|michelin/.test(nome) ||
+     (tags.cuisine||'').includes('fine_dining')) return 'fino';
+  return 'restaurante';
+}
+const NOME_TIPO = { tasca:'Tasca / Taberna', restaurante:'Restaurante', fino:'Fine dining', rapido:'Comida rápida' };
+
+// Nível de preço a partir de tags OSM (quando existe)
+function nivelPreco(tags){
+  const p = tags['price'] || tags['price:range'] || tags['charge'] || '';
+  if(/€€€|\$\$\$|expensive|3/.test(p)) return 3;
+  if(/€€|\$\$|moderate|2/.test(p)) return 2;
+  if(/€|\$|cheap|inexpensive|1/.test(p)) return 1;
+  return null; // sem informação
+}
+
+function morada(tags){
+  const partes = [];
+  const rua = [tags['addr:street'], tags['addr:housenumber']].filter(Boolean).join(' ');
+  if(rua) partes.push(rua);
+  if(tags['addr:postcode']) partes.push(tags['addr:postcode']);
+  if(tags['addr:city']) partes.push(tags['addr:city']);
+  return partes.join(', ') || null;
+}
+
+// ---------------- Geocodificação (Nominatim) ----------------
+async function geocodificar(texto){
+  const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=pt&q=' + encodeURIComponent(texto);
+  let r;
+  try{
+    r = await fetchComLimite(url, { headers: { 'Accept':'application/json' } }, 12000);
+  }catch(e){
+    throw new Error(e.name === 'AbortError' ? 'o serviço de localização demorou demasiado a responder' : 'não foi possível contactar o serviço de localização');
+  }
+  if(!r.ok) throw new Error('o serviço de localização devolveu um erro (HTTP ' + r.status + ')');
+  const dados = await r.json();
+  if(!dados.length) return null;
+  return { lat:+dados[0].lat, lon:+dados[0].lon, nome:dados[0].display_name };
+}
+
+// ---------------- Overpass (restaurantes) ----------------
+// Vários espelhos, por esta ordem. Se um estiver lento/em baixo, tenta o seguinte.
+const ENDPOINTS_OVERPASS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.osm.ch/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass.openstreetmap.ru/api/interpreter'
+];
+
+async function fetchComLimite(url, opcoes, limiteMs){
+  const controlador = new AbortController();
+  const temporizador = setTimeout(() => controlador.abort(), limiteMs);
+  try{
+    return await fetch(url, { ...opcoes, signal: controlador.signal });
+  }finally{
+    clearTimeout(temporizador);
+  }
+}
+
+async function procurarRestaurantes(lat, lon, raio, avisar){
+  const query = `[out:json][timeout:25];
+(
+  node["amenity"~"^(restaurant|fast_food)$"](around:${raio},${lat},${lon});
+  way["amenity"~"^(restaurant|fast_food)$"](around:${raio},${lat},${lon});
+);
+out center tags;`;
+
+  let ultimoErro = null;
+  for(let i = 0; i < ENDPOINTS_OVERPASS.length; i++){
+    const ep = ENDPOINTS_OVERPASS[i];
+    try{
+      if(i > 0 && avisar) avisar('Servidor anterior demorou demasiado — a tentar um servidor alternativo (' + (i+1) + '/' + ENDPOINTS_OVERPASS.length + ')…');
+      const r = await fetchComLimite(ep, { method:'POST', body:'data=' + encodeURIComponent(query),
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded' } }, 15000);
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      const dados = await r.json();
+      return dados.elements || [];
+    }catch(e){
+      ultimoErro = (e.name === 'AbortError') ? new Error('tempo limite excedido') : e;
+    }
+  }
+  throw new Error('todos os servidores de dados estão lentos ou indisponíveis neste momento (' + (ultimoErro?.message || '') + ')');
+}
+
+// ---------------- Pesquisa principal ----------------
+async function pesquisar(){
+  const local = $('localidade').value.trim();
+  if(!local){ estado('<span class="erro">Indica primeiro a localidade.</span>'); return; }
+
+  const btn = $('btnProcurar');
+  btn.disabled = true; btn.textContent = 'A procurar…';
+  estado('A localizar «' + escapar(local) + '»…');
+
+  try{
+    const geo = await geocodificar(local);
+    if(!geo){ estado('<span class="erro">Localidade não encontrada. Experimenta ser mais específico (ex.: «Óbidos, Portugal»).</span>'); return; }
+
+    const raio = +$('raio').value;
+    estado('A procurar restaurantes num raio de ' + (raio>=1000 ? (raio/1000)+' km' : raio+' m') + ' à volta de ' + escapar(geo.nome.split(',')[0]) + '…');
+
+    const elementos = await procurarRestaurantes(geo.lat, geo.lon, raio, estado);
+
+    // Normalizar
+    resultados = elementos
+      .filter(e => e.tags && e.tags.name)
+      .map(e => {
+        const lat = e.lat ?? e.center?.lat, lon = e.lon ?? e.center?.lon;
+        return {
+          id: e.id, lat, lon, tags: e.tags,
+          nome: e.tags.name,
+          cozinhaRaw: (e.tags.cuisine || '').toLowerCase(),
+          cozinha: cozinhaLegivel(e.tags.cuisine),
+          tipo: classificarTipo(e.tags),
+          preco: nivelPreco(e.tags),
+          morada: morada(e.tags),
+          telefone: e.tags.phone || e.tags['contact:phone'] || null,
+          site: e.tags.website || e.tags['contact:website'] || null,
+          horario: e.tags.opening_hours || null,
+          dist: distanciaKm(geo.lat, geo.lon, lat, lon)
+        };
+      })
+      .filter(r => r.lat && r.lon);
+
+    // Filtros
+    const fCozinha = $('cozinha').value;   // ex.: "japanese,sushi"
+    const fTipo = $('tipo').value;
+    const fPreco = $('preco').value ? +$('preco').value : null;
+
+    let filtrados = resultados;
+    if(fCozinha){
+      const alvos = fCozinha.split(',');
+      filtrados = filtrados.filter(r => alvos.some(a => r.cozinhaRaw.includes(a)));
+    }
+    if(fTipo) filtrados = filtrados.filter(r => r.tipo === fTipo);
+    if(fPreco) filtrados = filtrados.filter(r => r.preco === null || r.preco <= fPreco);
+
+    filtrados.sort((a,b) => a.dist - b.dist);
+    filtrados = filtrados.slice(0, 60); // limite razoável
+
+    desenhar(filtrados, geo, raio, resultados.length);
+  }catch(e){
+    console.error(e);
+    estado('<span class="erro">Erro ao obter dados: ' + escapar(e.message) + '. Tenta novamente dentro de momentos.</span>');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Procurar';
+  }
+}
+
+// ---------------- Apresentação ----------------
+function limparMapa(){
+  marcadores.forEach(m => mapa.removeLayer(m));
+  marcadores = [];
+  if(circuloRaio){ mapa.removeLayer(circuloRaio); circuloRaio = null; }
+}
+
+function iconeMarcador(ativo){
+  return L.divIcon({ className:'', html:'<div class="marcador' + (ativo?' ativo':'') + '"></div>',
+    iconSize:[22,22], iconAnchor:[11,11] });
+}
+
+function desenhar(lista, geo, raio, totalBruto){
+  limparMapa();
+  const el = $('lista');
+
+  circuloRaio = L.circle([geo.lat, geo.lon], { radius:raio, color:'#1D4E89', weight:1.5, fillOpacity:.05 }).addTo(mapa);
+
+  if(!lista.length){
+    el.innerHTML = '<div class="vazio">Sem resultados com estes filtros.<br>' +
+      (totalBruto ? 'Havia ' + totalBruto + ' restaurantes na zona — experimenta alargar os filtros ou o raio.' : 'Experimenta aumentar o raio de busca.') + '</div>';
+    mapa.fitBounds(circuloRaio.getBounds());
+    estado('0 resultados.');
+    return;
+  }
+
+  estado(lista.length + ' restaurante' + (lista.length>1?'s':'') + ' encontrados' +
+    ($('preco').value ? ' <span class="aviso">Nota: restaurantes sem preço registado no OpenStreetMap continuam visíveis, marcados como «preço s/ info».</span>' : ''));
+
+  el.innerHTML = lista.map((r,i) => {
+    const linhas = [];
+    if(r.morada)  linhas.push('<span class="rotulo">Morada:</span> ' + escapar(r.morada));
+    if(r.telefone)linhas.push('<span class="rotulo">Telefone:</span> <a href="tel:' + escapar(r.telefone.replace(/\s/g,'')) + '">' + escapar(r.telefone) + '</a>');
+    if(r.site)    linhas.push('<span class="rotulo">Site:</span> <a href="' + escapar(r.site) + '" target="_blank" rel="noopener">' + escapar(r.site.replace(/^https?:\/\//,'').replace(/\/$/,'')) + '</a>');
+    if(r.horario) linhas.push('<span class="rotulo">Horário:</span> ' + escapar(r.horario));
+
+    const qGoogle = encodeURIComponent(r.nome + ' restaurante ' + (r.morada || geoNomeCurto(geo)));
+    const qTrip   = encodeURIComponent(r.nome + ' ' + geoNomeCurto(geo));
+
+    return `<div class="cartao" data-i="${i}" id="cartao-${i}">
+      <h3>${escapar(r.nome)}</h3>
+      <div class="etiquetas">
+        ${r.cozinha ? '<span class="etiqueta et-cozinha">' + escapar(r.cozinha) + '</span>' : ''}
+        <span class="etiqueta et-tipo">${NOME_TIPO[r.tipo]}</span>
+        <span class="etiqueta et-preco">${r.preco ? '€'.repeat(r.preco) : 'preço s/ info'}</span>
+        <span class="etiqueta et-dist">${r.dist < 1 ? Math.round(r.dist*1000) + ' m' : r.dist.toFixed(1) + ' km'}</span>
+      </div>
+      <div class="detalhe">${linhas.join('<br>') || '<span class="rotulo">Sem detalhes registados — usa os botões abaixo para ver críticas e contactos.</span>'}</div>
+      <div class="acoes">
+        <a class="a-google" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${qGoogle}">Google Maps · críticas</a>
+        <a class="a-trip" target="_blank" rel="noopener" href="https://www.tripadvisor.pt/Search?q=${qTrip}">TripAdvisor</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Marcadores
+  lista.forEach((r,i) => {
+    const m = L.marker([r.lat, r.lon], { icon: iconeMarcador(false) })
+      .addTo(mapa)
+      .bindPopup('<b>' + escapar(r.nome) + '</b><br>' + (r.cozinha ? escapar(r.cozinha) + '<br>' : '') + (r.morada ? escapar(r.morada) : ''));
+    m.on('click', () => selecionar(i, lista, false));
+    marcadores.push(m);
+  });
+
+  // Clique no cartão → centra mapa
+  el.querySelectorAll('.cartao').forEach(c => {
+    c.addEventListener('click', ev => {
+      if(ev.target.closest('a')) return; // não interceptar os botões
+      selecionar(+c.dataset.i, lista, true);
+    });
+  });
+
+  const grupo = L.featureGroup(marcadores.concat(circuloRaio));
+  mapa.fitBounds(grupo.getBounds().pad(0.1));
+}
+
+function geoNomeCurto(geo){ return geo.nome.split(',')[0]; }
+
+function selecionar(i, lista, centrar){
+  document.querySelectorAll('.cartao').forEach(c => c.classList.remove('ativo'));
+  const cartao = $('cartao-' + i);
+  if(cartao){ cartao.classList.add('ativo'); cartao.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  marcadores.forEach((m,j) => m.setIcon(iconeMarcador(j === i)));
+  if(centrar){ mapa.setView([lista[i].lat, lista[i].lon], Math.max(mapa.getZoom(), 16)); }
+  marcadores[i].openPopup();
+}
+
+// ---------------- Eventos ----------------
+$('btnProcurar').addEventListener('click', pesquisar);
+$('localidade').addEventListener('keydown', e => { if(e.key === 'Enter') pesquisar(); });
+</script>
+</body>
+</html>
