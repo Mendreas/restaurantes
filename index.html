@@ -41,6 +41,13 @@ header .inner{position:relative;max-width:1280px;margin:0 auto;display:flex;alig
 header h1{font-family:'Fraunces',serif;font-weight:700;font-size:1.7rem;letter-spacing:.3px}
 header p{font-size:.9rem;opacity:.85}
 
+/* ---------- Abas ---------- */
+.abas{background:var(--cobalto-escuro)}
+.abas .inner{max-width:1280px;margin:0 auto;display:flex;gap:2px;padding:0 24px;overflow-x:auto}
+.aba-btn{background:transparent;border:none;color:#C9D8E8;font:inherit;font-weight:700;font-size:.9rem;padding:14px 18px;cursor:pointer;border-bottom:3px solid transparent;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.aba-btn.ativa{color:var(--branco);border-bottom-color:var(--mostarda)}
+.contador-aba{background:var(--mostarda);color:var(--branco);font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:20px;line-height:1.5}
+
 /* ---------- Barra de filtros ---------- */
 .filtros{
   background:var(--branco);
@@ -77,7 +84,10 @@ header p{font-size:.9rem;opacity:.85}
 }
 .cartao:hover{border-color:var(--cobalto)}
 .cartao.ativo{border:2px solid var(--cobalto)}
-.cartao h3{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;color:var(--cobalto-escuro);margin-bottom:6px}
+.cartao-cabecalho{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.cartao h3{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:700;color:var(--cobalto-escuro)}
+.btn-selecionar{flex-shrink:0;border:1.5px solid var(--linha);background:var(--branco);color:var(--cinza);font-size:.76rem;font-weight:700;padding:6px 11px;border-radius:20px;cursor:pointer;white-space:nowrap}
+.btn-selecionar.selecionado{background:var(--mostarda);border-color:var(--mostarda);color:var(--branco)}
 .etiquetas{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .etiqueta{font-size:.72rem;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.02em}
 .et-cozinha{background:#E4EDF7;color:var(--cobalto-escuro)}
@@ -106,6 +116,68 @@ header p{font-size:.9rem;opacity:.85}
 .leaflet-popup-content{font-family:'Public Sans',sans-serif;font-size:.88rem}
 .leaflet-popup-content b{font-family:'Fraunces',serif;font-size:1rem;color:var(--cobalto-escuro)}
 
+/* ---------- Barra flutuante de seleção ---------- */
+body.tem-barra{padding-bottom:74px}
+.barra-selecao{position:fixed;left:0;right:0;bottom:0;background:var(--cobalto-escuro);box-shadow:0 -2px 10px rgba(0,0,0,.25);z-index:500;padding:12px 24px}
+.barra-selecao .inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;color:var(--branco)}
+.barra-selecao .contagem{font-weight:700;font-size:.92rem}
+#btnColocarVotacao{background:var(--mostarda);color:var(--branco);border:none;padding:11px 20px;border-radius:8px;font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;white-space:nowrap}
+#btnColocarVotacao:hover{background:#96690F}
+
+/* ---------- Modal criação de votação ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(22,40,60,.55);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
+.modal-overlay[hidden]{display:none}
+.modal-caixa{background:var(--branco);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:24px;box-shadow:var(--sombra)}
+@media (min-width:640px){ .modal-overlay{align-items:center;padding:20px} .modal-caixa{border-radius:16px} }
+.modal-caixa h2{font-family:'Fraunces',serif;font-size:1.3rem;color:var(--cobalto-escuro);margin-bottom:16px}
+.modal-caixa .campo{margin-bottom:14px}
+.mv-lista-restaurantes{background:var(--fundo);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:.85rem}
+.mv-lista-restaurantes strong{color:var(--cobalto-escuro)}
+.mv-lista-restaurantes ul{margin:6px 0 0 18px}
+.linha-data{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.linha-data input{padding:9px 10px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.86rem}
+.remover-data{background:none;border:none;color:var(--cinza);font-size:1.2rem;cursor:pointer;padding:4px 8px;line-height:1}
+#mvAddData{background:none;border:1.5px dashed var(--linha);color:var(--cobalto);font:inherit;font-weight:700;font-size:.85rem;padding:9px 12px;border-radius:8px;cursor:pointer;width:100%;margin-bottom:16px}
+.modal-acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+.btn-secundario{background:var(--branco);border:1.5px solid var(--linha);color:var(--tinta);padding:10px 18px;border-radius:8px;font:inherit;font-weight:700;cursor:pointer}
+.btn-primario{background:var(--cobalto);border:none;color:var(--branco);padding:10px 18px;border-radius:8px;font:inherit;font-weight:700;cursor:pointer}
+.btn-primario:hover{background:var(--cobalto-escuro)}
+.modal-erro{color:#A83232;font-size:.85rem;font-weight:600;margin-top:6px}
+
+/* ---------- Aba Votação ---------- */
+.votacao-wrap{max-width:720px;margin:0 auto;padding:24px}
+.votacao-vazio{background:var(--branco);border:1px dashed var(--linha);border-radius:12px;padding:48px 24px;text-align:center;color:var(--cinza)}
+.votacao-vazio button{margin-top:16px}
+
+.painel-partilha{background:var(--branco);border:1px solid var(--linha);border-radius:12px;padding:18px;margin-bottom:20px;box-shadow:var(--sombra)}
+.painel-partilha h3{font-family:'Fraunces',serif;color:var(--cobalto-escuro);font-size:1.05rem;margin-bottom:12px}
+.linha-link{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.linha-link input{flex:1;min-width:180px;padding:9px 10px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.8rem;background:var(--fundo);color:var(--cinza)}
+.linha-link button{background:var(--cobalto);color:var(--branco);border:none;padding:9px 14px;border-radius:8px;font:inherit;font-weight:700;font-size:.82rem;cursor:pointer;white-space:nowrap}
+.linha-link button:hover{background:var(--cobalto-escuro)}
+.painel-partilha label{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:6px}
+.linha-convite{display:flex;gap:8px;flex-wrap:wrap}
+.linha-convite input{flex:1;min-width:200px;padding:9px 10px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.85rem}
+.linha-convite button{background:var(--verde);color:var(--branco);border:none;padding:9px 16px;border-radius:8px;font:inherit;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap}
+.linha-convite button:hover{background:#215F3B}
+
+.form-voto{background:var(--branco);border:1px solid var(--linha);border-radius:12px;padding:20px;box-shadow:var(--sombra)}
+.form-voto h2{font-family:'Fraunces',serif;color:var(--cobalto-escuro);font-size:1.25rem;margin-bottom:4px}
+.form-voto .subtitulo{color:var(--cinza);font-size:.88rem;margin-bottom:18px}
+.form-voto h4{font-size:.76rem;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin:18px 0 8px}
+.opcao-radio{display:flex;align-items:flex-start;gap:10px;border:1.5px solid var(--linha);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.opcao-radio.marcada{border-color:var(--cobalto);background:#F4F8FC}
+.opcao-radio input{margin-top:3px;flex-shrink:0}
+.opcao-radio .txt strong{display:block;font-size:.92rem;color:var(--tinta)}
+.opcao-radio .txt span{font-size:.78rem;color:var(--cinza)}
+.info-data-unica{background:#F4F8FC;border:1.5px solid var(--cobalto);border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:.9rem;color:var(--tinta)}
+.form-voto .campo{margin-bottom:14px}
+#btnEnviarVoto{width:100%;background:var(--mostarda);color:var(--branco);border:none;padding:13px;border-radius:8px;font:inherit;font-weight:700;font-size:.98rem;cursor:pointer;margin-top:14px}
+#btnEnviarVoto:hover{background:#96690F}
+.voto-erro{color:#A83232;font-size:.85rem;font-weight:600;margin-top:8px}
+.confirmacao-voto{background:#EEF6EF;border:1.5px solid var(--verde);border-radius:12px;padding:18px;margin-top:16px;font-size:.9rem;color:var(--tinta)}
+.confirmacao-voto textarea{width:100%;margin-top:10px;padding:10px;border:1px solid var(--linha);border-radius:8px;font:inherit;font-size:.8rem;min-height:110px;background:var(--fundo);color:var(--tinta)}
+
 /* ---------- Responsivo (iPad / telemóvel) ---------- */
 @media (max-width:1000px){
   .filtros .inner{grid-template-columns:1fr 1fr;gap:10px}
@@ -113,6 +185,7 @@ header p{font-size:.9rem;opacity:.85}
   .corpo{grid-template-columns:1fr}
   #mapa{position:static;height:45vh;order:-1}
   #lista{max-height:none;overflow:visible}
+  .votacao-wrap{padding:16px}
 }
 </style>
 </head>
@@ -125,77 +198,131 @@ header p{font-size:.9rem;opacity:.85}
   </div>
 </header>
 
-<div class="filtros">
+<nav class="abas">
   <div class="inner">
-    <div class="campo">
-      <label for="localidade">Localidade (cidade ou vila)</label>
-      <input id="localidade" type="text" placeholder="ex.: Lisboa, Sintra, Cascais…" value="">
+    <button class="aba-btn ativa" id="btnAbaProcurar" type="button">🔍 Procurar</button>
+    <button class="aba-btn" id="btnAbaVotacao" type="button">🗳️ Votação <span class="contador-aba" id="contadorAbaVotacao" hidden>0</span></button>
+  </div>
+</nav>
+
+<!-- ===================== ABA: PROCURAR ===================== -->
+<div id="aba-procurar">
+
+  <div class="filtros">
+    <div class="inner">
+      <div class="campo">
+        <label for="localidade">Localidade (cidade ou vila)</label>
+        <input id="localidade" type="text" placeholder="ex.: Lisboa, Sintra, Cascais…" value="">
+      </div>
+      <div class="campo">
+        <label for="raio">Raio de busca</label>
+        <select id="raio">
+          <option value="500">500 m</option>
+          <option value="1000">1 km</option>
+          <option value="2000" selected>2 km</option>
+          <option value="5000">5 km</option>
+          <option value="10000">10 km</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="cozinha">Tipo de comida</label>
+        <select id="cozinha">
+          <option value="">Todas</option>
+          <option value="portuguese,regional">Portuguesa</option>
+          <option value="alentejan">Alentejana</option>
+          <option value="madeiran">Madeirense</option>
+          <option value="azorean">Açoreana</option>
+          <option value="algarve">Algarvia</option>
+          <option value="seafood,fish">Marisco / Peixe</option>
+          <option value="steak_house,grill,barbecue">Grelhados / Carnes</option>
+          <option value="italian,pizza,pasta">Italiana / Pizza</option>
+          <option value="japanese,sushi">Japonesa / Sushi</option>
+          <option value="indian">Indiana</option>
+          <option value="chinese">Chinesa</option>
+          <option value="thai">Tailandesa</option>
+          <option value="mexican">Mexicana</option>
+          <option value="brazilian">Brasileira</option>
+          <option value="spanish,tapas">Espanhola / Tapas</option>
+          <option value="french">Francesa</option>
+          <option value="vegetarian,vegan">Vegetariana / Vegan</option>
+          <option value="burger">Hambúrgueres</option>
+          <option value="international,fusion">Internacional / Fusão</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="tipo">Tipo de restaurante</label>
+        <select id="tipo">
+          <option value="">Todos</option>
+          <option value="tasca">Tasca / Taberna / Casa de pasto</option>
+          <option value="restaurante">Restaurante</option>
+          <option value="fino">Fine dining / Gourmet</option>
+          <option value="rapido">Comida rápida</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="preco">Preço máximo</label>
+        <select id="preco">
+          <option value="">Qualquer</option>
+          <option value="1">€ (económico)</option>
+          <option value="2">€€ (moderado)</option>
+          <option value="3">€€€ (elevado)</option>
+        </select>
+      </div>
+      <button id="btnProcurar">Procurar</button>
     </div>
-    <div class="campo">
-      <label for="raio">Raio de busca</label>
-      <select id="raio">
-        <option value="500">500 m</option>
-        <option value="1000">1 km</option>
-        <option value="2000" selected>2 km</option>
-        <option value="5000">5 km</option>
-        <option value="10000">10 km</option>
-      </select>
+  </div>
+
+  <div id="estado"></div>
+
+  <div class="corpo">
+    <div id="lista">
+      <div class="vazio">Indica a localidade e carrega em <b>Procurar</b>.<br>Os resultados aparecem aqui e no mapa.</div>
     </div>
-    <div class="campo">
-      <label for="cozinha">Tipo de comida</label>
-      <select id="cozinha">
-        <option value="">Todas</option>
-        <option value="portuguese,regional">Portuguesa</option>
-        <option value="alentejan">Alentejana</option>
-        <option value="madeiran">Madeirense</option>
-        <option value="azorean">Açoreana</option>
-        <option value="algarve">Algarvia</option>
-        <option value="seafood,fish">Marisco / Peixe</option>
-        <option value="steak_house,grill,barbecue">Grelhados / Carnes</option>
-        <option value="italian,pizza,pasta">Italiana / Pizza</option>
-        <option value="japanese,sushi">Japonesa / Sushi</option>
-        <option value="indian">Indiana</option>
-        <option value="chinese">Chinesa</option>
-        <option value="thai">Tailandesa</option>
-        <option value="mexican">Mexicana</option>
-        <option value="brazilian">Brasileira</option>
-        <option value="spanish,tapas">Espanhola / Tapas</option>
-        <option value="french">Francesa</option>
-        <option value="vegetarian,vegan">Vegetariana / Vegan</option>
-        <option value="burger">Hambúrgueres</option>
-        <option value="international,fusion">Internacional / Fusão</option>
-      </select>
-    </div>
-    <div class="campo">
-      <label for="tipo">Tipo de restaurante</label>
-      <select id="tipo">
-        <option value="">Todos</option>
-        <option value="tasca">Tasca / Taberna / Casa de pasto</option>
-        <option value="restaurante">Restaurante</option>
-        <option value="fino">Fine dining / Gourmet</option>
-        <option value="rapido">Comida rápida</option>
-      </select>
-    </div>
-    <div class="campo">
-      <label for="preco">Preço máximo</label>
-      <select id="preco">
-        <option value="">Qualquer</option>
-        <option value="1">€ (económico)</option>
-        <option value="2">€€ (moderado)</option>
-        <option value="3">€€€ (elevado)</option>
-      </select>
-    </div>
-    <button id="btnProcurar">Procurar</button>
+    <div id="mapa"></div>
+  </div>
+
+</div>
+
+<!-- Barra flutuante de seleção -->
+<div class="barra-selecao" id="barraSelecao" hidden>
+  <div class="inner">
+    <span class="contagem" id="contagemSelecao">0 restaurantes selecionados</span>
+    <button id="btnColocarVotacao" type="button">Colocar a votação →</button>
   </div>
 </div>
 
-<div id="estado"></div>
+<!-- ===================== ABA: VOTAÇÃO ===================== -->
+<div id="aba-votacao" hidden>
+  <div class="votacao-wrap" id="votacaoConteudo"></div>
+</div>
 
-<div class="corpo">
-  <div id="lista">
-    <div class="vazio">Indica a localidade e carrega em <b>Procurar</b>.<br>Os resultados aparecem aqui e no mapa.</div>
+<!-- ===================== MODAL: CRIAR VOTAÇÃO ===================== -->
+<div class="modal-overlay" id="modalVotacao" hidden>
+  <div class="modal-caixa">
+    <h2>Colocar a votação</h2>
+
+    <div class="mv-lista-restaurantes" id="mvListaRestaurantes"></div>
+
+    <div class="campo">
+      <label for="mvTitulo">Título da reunião (opcional)</label>
+      <input id="mvTitulo" type="text" placeholder="ex.: Almoço de equipa GOPLIS">
+    </div>
+    <div class="campo">
+      <label for="mvEmailOrganizador">O teu e-mail (é para aqui que os votos são enviados)</label>
+      <input id="mvEmailOrganizador" type="email" placeholder="tu@navportugal.pt">
+    </div>
+
+    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Data(s) e hora(s) propostas</label>
+    <div id="mvDatas"></div>
+    <button id="mvAddData" type="button">+ Adicionar outra data/hora</button>
+
+    <div id="mvErro" class="modal-erro" hidden></div>
+
+    <div class="modal-acoes">
+      <button class="btn-secundario" id="mvCancelar" type="button">Cancelar</button>
+      <button class="btn-primario" id="mvCriar" type="button">Criar votação</button>
+    </div>
   </div>
-  <div id="mapa"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -211,6 +338,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 let marcadores = [];
 let circuloRaio = null;
 let resultados = [];
+let listaAtual = [];
+
+// Seleção para votação (persiste entre pesquisas), chave = id OSM
+let selecionadosMapa = new Map();
+// Votação atual (criada agora ou carregada de um link)
+let votacaoAtual = null;
 
 // ---------------- Utilidades ----------------
 const $ = id => document.getElementById(id);
@@ -223,7 +356,7 @@ function distanciaKm(lat1, lon1, lat2, lon2){
 }
 
 function escapar(t){
-  return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function estado(html){ $('estado').innerHTML = html; }
@@ -437,6 +570,7 @@ function iconeMarcador(ativo){
 
 function desenhar(lista, geo, raio, totalBruto){
   limparMapa();
+  listaAtual = lista;
   const el = $('lista');
 
   circuloRaio = L.circle([geo.lat, geo.lon], { radius:raio, color:'#1D4E89', weight:1.5, fillOpacity:.05 }).addTo(mapa);
@@ -461,9 +595,13 @@ function desenhar(lista, geo, raio, totalBruto){
 
     const qGoogle = encodeURIComponent(r.nome + ' restaurante ' + (r.morada || geoNomeCurto(geo)));
     const qTrip   = encodeURIComponent(r.nome + ' ' + geoNomeCurto(geo));
+    const selecionado = selecionadosMapa.has(r.id);
 
     return `<div class="cartao" data-i="${i}" id="cartao-${i}">
-      <h3>${escapar(r.nome)}</h3>
+      <div class="cartao-cabecalho">
+        <h3>${escapar(r.nome)}</h3>
+        <button type="button" class="btn-selecionar${selecionado?' selecionado':''}" data-id="${r.id}">${selecionado ? '★ Selecionado' : '☆ Selecionar'}</button>
+      </div>
       <div class="etiquetas">
         ${r.cozinha ? '<span class="etiqueta et-cozinha">' + escapar(r.cozinha) + '</span>' : ''}
         <span class="etiqueta et-tipo">${NOME_TIPO[r.tipo]}</span>
@@ -487,11 +625,21 @@ function desenhar(lista, geo, raio, totalBruto){
     marcadores.push(m);
   });
 
-  // Clique no cartão → centra mapa
+  // Clique no cartão → centra mapa (mas não ao clicar em links ou no botão de seleção)
   el.querySelectorAll('.cartao').forEach(c => {
     c.addEventListener('click', ev => {
-      if(ev.target.closest('a')) return; // não interceptar os botões
+      if(ev.target.closest('a') || ev.target.closest('.btn-selecionar')) return;
       selecionar(+c.dataset.i, lista, true);
+    });
+  });
+
+  // Botão de seleção para votação (delegação)
+  el.querySelectorAll('.btn-selecionar').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const id = +btn.dataset.id;
+      const r = lista.find(x => x.id === id) || resultados.find(x => x.id === id);
+      if(r) alternarSelecao(r, btn);
     });
   });
 
@@ -510,9 +658,386 @@ function selecionar(i, lista, centrar){
   marcadores[i].openPopup();
 }
 
-// ---------------- Eventos ----------------
+// ===================== SELEÇÃO PARA VOTAÇÃO =====================
+function dadosResumidos(r){
+  return {
+    id: r.id, nome: r.nome, morada: r.morada, cozinha: r.cozinha,
+    tipo: r.tipo, preco: r.preco, telefone: r.telefone, site: r.site,
+    lat: r.lat, lon: r.lon
+  };
+}
+
+function alternarSelecao(r, btn){
+  if(selecionadosMapa.has(r.id)){
+    selecionadosMapa.delete(r.id);
+    if(btn){ btn.classList.remove('selecionado'); btn.textContent = '☆ Selecionar'; }
+  }else{
+    selecionadosMapa.set(r.id, dadosResumidos(r));
+    if(btn){ btn.classList.add('selecionado'); btn.textContent = '★ Selecionado'; }
+  }
+  atualizarBarraSelecao();
+}
+
+function atualizarBarraSelecao(){
+  const n = selecionadosMapa.size;
+  const barra = $('barraSelecao');
+  if(n > 0){
+    barra.hidden = false;
+    document.body.classList.add('tem-barra');
+    $('contagemSelecao').textContent = n + ' restaurante' + (n>1?'s':'') + ' selecionado' + (n>1?'s':'');
+  }else{
+    barra.hidden = true;
+    document.body.classList.remove('tem-barra');
+  }
+}
+
+// ===================== CODIFICAÇÃO DO LINK DE VOTAÇÃO =====================
+function paraBase64Url(objeto){
+  const bytes = new TextEncoder().encode(JSON.stringify(objeto));
+  let binario = '';
+  bytes.forEach(b => binario += String.fromCharCode(b));
+  return btoa(binario).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function deBase64Url(txt){
+  let b64 = txt.replace(/-/g,'+').replace(/_/g,'/');
+  while(b64.length % 4) b64 += '=';
+  const binario = atob(b64);
+  const bytes = Uint8Array.from(binario, c => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function linkPartilhavel(votacao){
+  return location.origin + location.pathname + '#v=' + paraBase64Url(votacao);
+}
+
+function formatarDataPT(dataISO){
+  const [ano,mes,dia] = dataISO.split('-');
+  return dia + '/' + mes + '/' + ano;
+}
+
+// ===================== MODAL: CRIAR VOTAÇÃO =====================
+function linhaDataHTML(data, hora){
+  return `<div class="linha-data">
+    <input type="date" class="mv-data" value="${data||''}">
+    <input type="time" class="mv-hora" value="${hora||''}">
+    <button type="button" class="remover-data" aria-label="Remover esta data">✕</button>
+  </div>`;
+}
+
+function abrirModalVotacao(){
+  if(selecionadosMapa.size === 0) return;
+
+  $('mvListaRestaurantes').innerHTML = '<strong>Restaurantes selecionados (' + selecionadosMapa.size + ')</strong><ul>' +
+    [...selecionadosMapa.values()].map(r => '<li>' + escapar(r.nome) + '</li>').join('') + '</ul>';
+
+  $('mvTitulo').value = '';
+  $('mvEmailOrganizador').value = '';
+  $('mvDatas').innerHTML = linhaDataHTML('', '');
+  $('mvErro').hidden = true;
+
+  $('modalVotacao').hidden = false;
+}
+
+function fecharModalVotacao(){
+  $('modalVotacao').hidden = true;
+}
+
+$('mvDatas').addEventListener('click', ev => {
+  if(ev.target.classList.contains('remover-data')){
+    const linhas = $('mvDatas').querySelectorAll('.linha-data');
+    if(linhas.length > 1) ev.target.closest('.linha-data').remove();
+  }
+});
+
+$('mvAddData').addEventListener('click', () => {
+  $('mvDatas').insertAdjacentHTML('beforeend', linhaDataHTML('', ''));
+});
+
+$('mvCancelar').addEventListener('click', fecharModalVotacao);
+
+$('mvCriar').addEventListener('click', () => {
+  const titulo = $('mvTitulo').value.trim();
+  const email = $('mvEmailOrganizador').value.trim();
+  const erroEl = $('mvErro');
+
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    erroEl.textContent = 'Indica um e-mail válido — é para aí que os votos vão chegar.';
+    erroEl.hidden = false;
+    return;
+  }
+
+  const datas = [];
+  $('mvDatas').querySelectorAll('.linha-data').forEach((linha, i) => {
+    const d = linha.querySelector('.mv-data').value;
+    const h = linha.querySelector('.mv-hora').value;
+    if(d && h) datas.push({ id:'d'+i, data:d, hora:h });
+  });
+
+  if(datas.length === 0){
+    erroEl.textContent = 'Indica pelo menos uma data e hora completas.';
+    erroEl.hidden = false;
+    return;
+  }
+
+  erroEl.hidden = true;
+
+  votacaoAtual = {
+    titulo,
+    organizadorEmail: email,
+    criadoEm: new Date().toISOString(),
+    restaurantes: [...selecionadosMapa.values()],
+    datas
+  };
+
+  location.hash = 'v=' + paraBase64Url(votacaoAtual);
+  fecharModalVotacao();
+  renderizarVotacao();
+  mudarAba('votacao');
+});
+
+// ===================== ABAS =====================
+function mudarAba(nome){
+  const eProcurar = nome === 'procurar';
+  $('aba-procurar').hidden = !eProcurar;
+  $('aba-votacao').hidden = eProcurar;
+  $('btnAbaProcurar').classList.toggle('ativa', eProcurar);
+  $('btnAbaVotacao').classList.toggle('ativa', !eProcurar);
+  if(eProcurar){
+    atualizarBarraSelecao();
+  }else{
+    $('barraSelecao').hidden = true;
+    document.body.classList.remove('tem-barra');
+  }
+}
+
+$('btnAbaProcurar').addEventListener('click', () => mudarAba('procurar'));
+$('btnAbaVotacao').addEventListener('click', () => {
+  if(!votacaoAtual) renderizarVotacao();
+  mudarAba('votacao');
+});
+$('btnColocarVotacao').addEventListener('click', abrirModalVotacao);
+
+// ===================== ABA VOTAÇÃO: RENDERIZAÇÃO =====================
+function copiarTexto(texto){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(texto).catch(() => copiarTextoAntigo(texto));
+  }
+  return Promise.resolve(copiarTextoAntigo(texto));
+}
+function copiarTextoAntigo(texto){
+  const ta = document.createElement('textarea');
+  ta.value = texto; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+function construirMailto({ to='', cc='', bcc='', assunto='', corpo='' }){
+  const partes = [];
+  if(cc) partes.push('cc=' + encodeURIComponent(cc));
+  if(bcc) partes.push('bcc=' + encodeURIComponent(bcc));
+  if(assunto) partes.push('subject=' + encodeURIComponent(assunto));
+  if(corpo) partes.push('body=' + encodeURIComponent(corpo));
+  return 'mailto:' + to + (partes.length ? '?' + partes.join('&') : '');
+}
+
+function textoConviteCorpo(votacao, link){
+  const listaRest = votacao.restaurantes.map(r => '- ' + r.nome + (r.morada ? ' (' + r.morada + ')' : '')).join('\n');
+  const listaDatas = votacao.datas.map(d => '- ' + formatarDataPT(d.data) + ' às ' + d.hora).join('\n');
+  return `Olá!
+
+Foste convidado(a) a escolher o restaurante para: ${votacao.titulo || 'a nossa reunião'}
+
+Restaurantes propostos:
+${listaRest}
+
+Data(s)/hora(s) proposta(s):
+${listaDatas}
+
+Escolhe o teu preferido e confirma aqui:
+${link}
+
+Obrigado!`;
+}
+
+function renderizarVotacao(){
+  const el = $('votacaoConteudo');
+  const contadorAba = $('contadorAbaVotacao');
+
+  if(!votacaoAtual){
+    contadorAba.hidden = true;
+    el.innerHTML = `<div class="votacao-vazio">
+      Ainda não há nenhuma votação criada.<br>
+      Volta à aba <b>Procurar</b>, seleciona os restaurantes com a estrela ☆ e carrega em <b>Colocar a votação</b>.
+      <br><button class="btn-primario" type="button" onclick="mudarAba('procurar')">Ir para Procurar</button>
+    </div>`;
+    return;
+  }
+
+  contadorAba.hidden = false;
+  contadorAba.textContent = votacaoAtual.restaurantes.length;
+
+  const link = linkPartilhavel(votacaoAtual);
+  const temVariasDatas = votacaoAtual.datas.length > 1;
+
+  const blocoRestaurantes = votacaoAtual.restaurantes.map((r,i) => `
+    <label class="opcao-radio" data-grupo="restaurante">
+      <input type="radio" name="votoRestaurante" value="${i}" ${i===0?'checked':''}>
+      <span class="txt">
+        <strong>${escapar(r.nome)}</strong>
+        <span>${[r.cozinha, r.morada].filter(Boolean).map(escapar).join(' · ')}</span>
+      </span>
+    </label>`).join('');
+
+  const blocoDatas = temVariasDatas
+    ? votacaoAtual.datas.map((d,i) => `
+        <label class="opcao-radio" data-grupo="data">
+          <input type="radio" name="votoData" value="${d.id}" ${i===0?'checked':''}>
+          <span class="txt">
+            <strong>${formatarDataPT(d.data)}</strong>
+            <span>às ${escapar(d.hora)}</span>
+          </span>
+        </label>`).join('')
+    : `<div class="info-data-unica"><strong>${formatarDataPT(votacaoAtual.datas[0].data)}</strong> às ${escapar(votacaoAtual.datas[0].hora)}</div>`;
+
+  el.innerHTML = `
+    <div class="painel-partilha">
+      <h3>${votacaoAtual.titulo ? escapar(votacaoAtual.titulo) : 'Votação de restaurante'}</h3>
+      <label>Link para partilhar</label>
+      <div class="linha-link">
+        <input type="text" readonly value="${escapar(link)}" id="votoLinkInput">
+        <button type="button" data-acao="copiar-link">Copiar</button>
+      </div>
+      <label>Convidar participantes por e-mail</label>
+      <div class="linha-convite">
+        <input type="text" id="votoEmailsConvite" placeholder="ana@empresa.pt, joao@empresa.pt">
+        <button type="button" data-acao="convidar">Enviar convite</button>
+      </div>
+    </div>
+
+    <div class="form-voto">
+      <h2>Escolhe o restaurante</h2>
+      <div class="subtitulo">${votacaoAtual.titulo ? escapar(votacaoAtual.titulo) : 'Vota no restaurante e no dia que preferes.'}</div>
+
+      <h4>Restaurante</h4>
+      ${blocoRestaurantes}
+
+      <h4>Dia${temVariasDatas ? ' — escolhe uma opção' : ''}</h4>
+      ${blocoDatas}
+
+      <h4>Os teus dados</h4>
+      <div class="campo">
+        <label for="votoNome">O teu nome</label>
+        <input type="text" id="votoNome" placeholder="Nome completo">
+      </div>
+      <div class="campo">
+        <label for="votoEmail">O teu e-mail</label>
+        <input type="email" id="votoEmail" placeholder="tu@empresa.pt">
+      </div>
+
+      <div id="votoErro" class="voto-erro" hidden></div>
+      <button type="button" id="btnEnviarVoto" data-acao="enviar-voto">Enviar o meu voto</button>
+
+      <div id="votoConfirmacao"></div>
+    </div>
+  `;
+
+  // Marcar visualmente a opção selecionada
+  el.querySelectorAll('input[type=radio]').forEach(inp => {
+    const marcar = () => {
+      el.querySelectorAll(`input[name="${inp.name}"]`).forEach(i2 => i2.closest('.opcao-radio').classList.toggle('marcada', i2.checked));
+    };
+    inp.addEventListener('change', marcar);
+    marcar();
+  });
+
+  // Ações (delegação)
+  el.addEventListener('click', onCliqueVotacao);
+}
+
+function onCliqueVotacao(ev){
+  const alvo = ev.target.closest('[data-acao]');
+  if(!alvo) return;
+  const acao = alvo.dataset.acao;
+
+  if(acao === 'copiar-link'){
+    copiarTexto($('votoLinkInput').value);
+    alvo.textContent = 'Copiado ✓';
+    setTimeout(() => alvo.textContent = 'Copiar', 1800);
+  }
+
+  if(acao === 'convidar'){
+    const emails = $('votoEmailsConvite').value.trim();
+    if(!emails) return;
+    const link = linkPartilhavel(votacaoAtual);
+    window.location.href = construirMailto({
+      cc: votacaoAtual.organizadorEmail,
+      bcc: emails,
+      assunto: 'Escolhe o restaurante — ' + (votacaoAtual.titulo || 'reunião'),
+      corpo: textoConviteCorpo(votacaoAtual, link)
+    });
+  }
+
+  if(acao === 'enviar-voto'){
+    const nome = $('votoNome').value.trim();
+    const email = $('votoEmail').value.trim();
+    const erroEl = $('votoErro');
+
+    if(!nome){ erroEl.textContent = 'Falta o teu nome.'; erroEl.hidden = false; return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ erroEl.textContent = 'Indica um e-mail válido.'; erroEl.hidden = false; return; }
+
+    const iRest = +document.querySelector('input[name="votoRestaurante"]:checked').value;
+    const restauranteEscolhido = votacaoAtual.restaurantes[iRest];
+
+    let dataEscolhida;
+    if(votacaoAtual.datas.length > 1){
+      const idData = document.querySelector('input[name="votoData"]:checked').value;
+      dataEscolhida = votacaoAtual.datas.find(d => d.id === idData);
+    }else{
+      dataEscolhida = votacaoAtual.datas[0];
+    }
+
+    erroEl.hidden = true;
+
+    const corpoVoto = `Nome: ${nome}
+E-mail: ${email}
+Restaurante escolhido: ${restauranteEscolhido.nome}${restauranteEscolhido.morada ? ' (' + restauranteEscolhido.morada + ')' : ''}
+Dia escolhido: ${formatarDataPT(dataEscolhida.data)} às ${dataEscolhida.hora}
+${votacaoAtual.titulo ? '\nReunião: ' + votacaoAtual.titulo : ''}`;
+
+    window.location.href = construirMailto({
+      to: votacaoAtual.organizadorEmail,
+      assunto: 'Voto: ' + nome + ' — ' + restauranteEscolhido.nome,
+      corpo: corpoVoto
+    });
+
+    $('votoConfirmacao').innerHTML = `<div class="confirmacao-voto">
+      O teu e-mail já deve ter aberto com o voto pronto a enviar. Se não abriu automaticamente, copia o texto abaixo e envia para <b>${escapar(votacaoAtual.organizadorEmail)}</b>:
+      <textarea readonly>${escapar(corpoVoto)}</textarea>
+    </div>`;
+  }
+}
+
+// ===================== CARREGAR VOTAÇÃO A PARTIR DO LINK =====================
+function carregarVotacaoDoHash(){
+  const m = location.hash.match(/^#v=(.+)$/);
+  if(!m) return false;
+  try{
+    votacaoAtual = deBase64Url(decodeURIComponent(m[1]));
+    renderizarVotacao();
+    mudarAba('votacao');
+    return true;
+  }catch(e){
+    console.error('Link de votação inválido:', e);
+    return false;
+  }
+}
+
+// ---------------- Eventos gerais ----------------
 $('btnProcurar').addEventListener('click', pesquisar);
 $('localidade').addEventListener('keydown', e => { if(e.key === 'Enter') pesquisar(); });
+
+carregarVotacaoDoHash();
 </script>
 </body>
 </html>
