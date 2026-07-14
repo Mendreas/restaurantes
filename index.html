@@ -1066,6 +1066,20 @@ function souOrganizadorDeste(id){
   catch(e){ return false; }
 }
 
+// Migração única: eventos criados antes de existir este sistema de "autoria" não
+// ficaram marcados. Recupera-os comparando o e-mail do organizador guardado do
+// evento com o e-mail deste dispositivo (guardado sempre que se cria um evento).
+function migrarPropriedadeEventosAntigos(){
+  const org = obterOrganizadorGuardado();
+  if(!org || !org.email) return;
+  const emailDispositivo = org.email.trim().toLowerCase();
+  obterEventos().forEach(e => {
+    if(!souOrganizadorDeste(e.id) && e.organizadorEmail && e.organizadorEmail.trim().toLowerCase() === emailDispositivo){
+      marcarComoMeuEvento(e.id);
+    }
+  });
+}
+
 function mesclarContactos(...listas){
   const mapa = new Map();
   listas.flat().forEach(c => {
@@ -2784,6 +2798,8 @@ $('resultadosNomeExato').addEventListener('click', ev => {
 // ---------------- Arranque ----------------
 $('btnProcurar').addEventListener('click', pesquisar);
 $('localidade').addEventListener('keydown', e => { if(e.key === 'Enter') pesquisar(); });
+
+migrarPropriedadeEventosAntigos();
 
 if(!carregarVotacaoDoHash()){
   renderizarInicio();
