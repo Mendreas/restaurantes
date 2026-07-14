@@ -57,7 +57,12 @@ header p{font-size:.9rem;opacity:.85}
 
 .corpo{max-width:1280px;margin:16px auto 40px;padding:0 24px;display:grid;grid-template-columns:440px 1fr;gap:18px;align-items:start}
 #mapa{height:78vh;min-height:420px;border-radius:12px;border:1px solid var(--linha);box-shadow:var(--sombra);position:sticky;top:12px;z-index:1}
-#lista{display:flex;flex-direction:column;gap:12px;max-height:78vh;overflow-y:auto;padding-right:4px}
+.coluna-lista{display:flex;flex-direction:column;gap:10px;max-height:78vh;min-height:0}
+.campo-busca{position:relative;flex-shrink:0}
+.campo-busca input{width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--linha);border-radius:10px;font:inherit;font-size:.9rem;background:var(--branco)}
+.campo-busca input:focus{outline:2px solid var(--cobalto);outline-offset:1px;border-color:var(--cobalto)}
+.campo-busca::before{content:"🔎";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:.9rem;opacity:.6;pointer-events:none}
+#lista{display:flex;flex-direction:column;gap:12px;flex:1;overflow-y:auto;padding-right:4px;min-height:0}
 
 .cartao{background:var(--branco);border:1px solid var(--linha);border-radius:12px;padding:16px 18px;box-shadow:var(--sombra);cursor:pointer;transition:border-color .15s}
 .cartao:hover{border-color:var(--cobalto)}
@@ -190,6 +195,7 @@ input[type=file]{font:inherit;font-size:.85rem}
   .corpo{grid-template-columns:1fr}
   #mapa{position:static;height:45vh;order:-1}
   #lista{max-height:none;overflow:visible}
+  .coluna-lista{max-height:none}
   .votacao-wrap{padding:16px}
   .linha-lista{grid-template-columns:1fr auto}
   .linha-lista .email{grid-column:1;padding-bottom:4px}
@@ -290,8 +296,14 @@ input[type=file]{font:inherit;font-size:.85rem}
   <div id="estado"></div>
 
   <div class="corpo">
-    <div id="lista">
-      <div class="vazio">Indica a localidade e carrega em <b>Procurar</b>.<br>Os resultados aparecem aqui e no mapa.</div>
+    <div class="coluna-lista">
+      <div class="campo-busca" id="colunaBusca" hidden>
+        <input id="procurarPalavra" type="text" placeholder="Procurar por nome, cozinha ou morada...">
+      </div>
+      <div id="lista">
+        <div class="vazio">Indica a localidade e carrega em <b>Procurar</b>.<br>Os resultados aparecem aqui e no mapa.</div>
+      </div>
+      <div class="vazio-pequeno" id="semResultadosBusca" hidden>Nenhum resultado corresponde a essa palavra.</div>
     </div>
     <div id="mapa"></div>
   </div>
@@ -596,15 +608,21 @@ function desenhar(lista, geo, raio, totalBruto){
   listaAtual = lista;
   const el = $('lista');
 
+  if($('procurarPalavra')) $('procurarPalavra').value = '';
+  $('semResultadosBusca').hidden = true;
+
   circuloRaio = L.circle([geo.lat, geo.lon], { radius:raio, color:'#1D4E89', weight:1.5, fillOpacity:.05 }).addTo(mapa);
 
   if(!lista.length){
+    $('colunaBusca').hidden = true;
     el.innerHTML = '<div class="vazio">Sem resultados com estes filtros.<br>' +
       (totalBruto ? 'Havia ' + totalBruto + ' restaurantes na zona — experimenta alargar os filtros ou o raio.' : 'Experimenta aumentar o raio de busca.') + '</div>';
     mapa.fitBounds(circuloRaio.getBounds());
     estado('0 resultados.');
     return;
   }
+
+  $('colunaBusca').hidden = false;
 
   estado(lista.length + ' restaurante' + (lista.length>1?'s':'') + ' encontrados' +
     ($('preco').value ? ' <span class="aviso">Nota: restaurantes sem preço registado no OpenStreetMap continuam visíveis, marcados como «preço s/ info».</span>' : ''));
@@ -619,8 +637,9 @@ function desenhar(lista, geo, raio, totalBruto){
     const qGoogle = encodeURIComponent(r.nome + ' restaurante ' + (r.morada || geoNomeCurto(geo)));
     const qTrip   = encodeURIComponent(r.nome + ' ' + geoNomeCurto(geo));
     const selecionado = restauranteEstaNoEvento(r.id);
+    const busca = escapar(normalizar([r.nome, r.cozinha, r.morada].filter(Boolean).join(' ')));
 
-    return `<div class="cartao" data-i="${i}" id="cartao-${i}">
+    return `<div class="cartao" data-i="${i}" id="cartao-${i}" data-busca="${busca}">
       <div class="cartao-cabecalho">
         <h3>${escapar(r.nome)}</h3>
         <button type="button" class="btn-selecionar${selecionado?' selecionado':''}" data-id="${r.id}">${selecionado ? '★ No evento' : '☆ Adicionar'}</button>
@@ -1732,6 +1751,21 @@ function carregarVotacaoDoHash(){
     return false;
   }
 }
+
+// ===================== FILTRAR RESULTADOS POR PALAVRA =====================
+function filtrarPorPalavra(){
+  const termo = normalizar($('procurarPalavra').value.trim());
+  const cartoes = document.querySelectorAll('#lista .cartao');
+  let algumVisivel = false;
+  cartoes.forEach((c, i) => {
+    const corresponde = !termo || (c.dataset.busca || '').includes(termo);
+    c.style.display = corresponde ? '' : 'none';
+    if(corresponde) algumVisivel = true;
+    if(marcadores[i]) marcadores[i].setOpacity(corresponde ? 1 : 0.15);
+  });
+  $('semResultadosBusca').hidden = algumVisivel || !termo;
+}
+$('procurarPalavra').addEventListener('input', filtrarPorPalavra);
 
 // ---------------- Arranque ----------------
 $('btnProcurar').addEventListener('click', pesquisar);
