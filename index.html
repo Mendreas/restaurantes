@@ -1665,24 +1665,25 @@ async function gerarPdfEvento(evento){
   try{ fotos = await obterFotosDoEvento(evento.id); }catch(e){ fotos = []; }
 
   if(fotos.length){
-    doc.addPage();
-    let yf = 20;
-    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(20,40,60);
-    doc.text('Fotografias', 14, yf); yf += 10;
+    const pagLargura = 210, margemLat = 14;
+    const areaLargura = pagLargura - margemLat * 2; // ~182mm
+    const topo = 30, fundo = 285;
+    const areaAltura = fundo - topo; // ~255mm
 
-    const caixaL = 85, caixaA = 65, margem = 10;
-    let coluna = 0, x = 14;
-    fotos.forEach(foto => {
-      if(yf + caixaA > 285){ doc.addPage(); yf = 20; }
-      let w = caixaL, h = caixaA;
+    fotos.forEach((foto, i) => {
+      doc.addPage();
+      doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(20,40,60);
+      doc.text('Fotografias' + (fotos.length > 1 ? ' (' + (i+1) + '/' + fotos.length + ')' : ''), 14, 20);
+
+      let w = areaLargura, h = areaAltura;
       if(foto.largura && foto.altura){
         const proporcao = foto.largura / foto.altura;
-        if(proporcao > caixaL / caixaA){ w = caixaL; h = caixaL / proporcao; }
-        else{ h = caixaA; w = caixaA * proporcao; }
+        if(areaLargura / proporcao <= areaAltura){ w = areaLargura; h = areaLargura / proporcao; }
+        else{ h = areaAltura; w = areaAltura * proporcao; }
       }
-      try{ doc.addImage(foto.dataUrl, 'JPEG', x, yf, w, h); }catch(e){ /* ignora imagem inválida */ }
-      if(coluna === 0){ x = 14 + caixaL + margem; coluna = 1; }
-      else{ x = 14; coluna = 0; yf += caixaA + margem; }
+      const x = (pagLargura - w) / 2;
+      const y = topo + (areaAltura - h) / 2;
+      try{ doc.addImage(foto.dataUrl, 'JPEG', x, y, w, h); }catch(e){ /* ignora imagem inválida */ }
     });
   }
 
