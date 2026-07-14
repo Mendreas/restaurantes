@@ -1957,6 +1957,24 @@ function blocoResultadosHTML(evento){
   return `<h4 style="margin-top:0">Restaurante mais votado</h4>${linhasRest}${blocoData}`;
 }
 
+function blocoResultadosPublicoHTML(evento){
+  const respostas = evento.respostas || [];
+  const linhasResp = respostas.map(r => `
+    <div class="linha-resposta">
+      <span><strong>${escapar(r.nome)}</strong> — ${escapar(r.restauranteNome)}${r.avaliacao ? ' · ' + '★'.repeat(r.avaliacao) : ''}</span>
+      <span style="color:var(--cinza)">${r.dataEscolhida ? formatarDataPT(r.dataEscolhida.data) + ' ' + r.dataEscolhida.hora : ''}</span>
+    </div>`).join('') || '<div class="vazio-pequeno">Ainda sem respostas registadas.</div>';
+
+  return `
+    <div class="painel-partilha">
+      <h3>Como está a correr a votação ${evento.estado === 'concluido' ? '<span class="etiqueta et-tipo">Concluído</span>' : '<span class="etiqueta et-preco">Aberto</span>'}</h3>
+      <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Resultados até agora</label>
+      <div style="margin-bottom:16px">${blocoResultadosHTML(evento)}</div>
+      <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Quem já respondeu (${respostas.length})</label>
+      <div>${linhasResp}</div>
+    </div>`;
+}
+
 function blocoGestaoEventoHTML(evento){
   const respostas = evento.respostas || [];
   const opcoesRestaurante = '<option value="">— escolhe —</option>' + evento.restaurantes.map((r,i) => `<option value="${i}">${escapar(r.nome)}</option>`).join('');
@@ -2039,7 +2057,8 @@ function renderizarVotacao(){
 
   const link = linkPartilhavel(votacaoAtual);
   const temVariasDatas = votacaoAtual.datas.length > 1;
-  const eventoLocal = (votacaoAtual.id && souOrganizadorDeste(votacaoAtual.id)) ? obterEvento(votacaoAtual.id) : null;
+  const eventoCompleto = votacaoAtual.id ? obterEvento(votacaoAtual.id) : null;
+  const eventoLocal = (votacaoAtual.id && souOrganizadorDeste(votacaoAtual.id)) ? eventoCompleto : null;
   const semRestaurantes = votacaoAtual.restaurantes.length === 0;
 
   const blocoRestaurantes = semRestaurantes
@@ -2089,7 +2108,7 @@ function renderizarVotacao(){
       </div>
     </div>
 
-    ${eventoLocal ? blocoGestaoEventoHTML(eventoLocal) : ''}
+    ${eventoLocal ? blocoGestaoEventoHTML(eventoLocal) : (eventoCompleto ? blocoResultadosPublicoHTML(eventoCompleto) : '')}
 
     <div class="form-voto">
       <h2>Escolhe o restaurante</h2>
