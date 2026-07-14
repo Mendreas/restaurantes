@@ -1777,9 +1777,12 @@ function analisarEmailVoto(texto, evento){
 
   let iRest = -1;
   if(restauranteLinha){
-    const nomeRestaurante = normalizar(restauranteLinha.split(' (')[0].trim());
-    iRest = evento.restaurantes.findIndex(r => normalizar(r.nome) === nomeRestaurante);
-    if(iRest < 0) iRest = evento.restaurantes.findIndex(r => normalizar(r.nome).includes(nomeRestaurante) || nomeRestaurante.includes(normalizar(r.nome)));
+    const bruto = restauranteLinha.split(' (')[0].trim();
+    const nomeExato = normalizar(bruto);
+    const nomeSolto = nomeExato.replace(/[^a-z0-9]+/g, ' ').trim();
+    iRest = evento.restaurantes.findIndex(r => normalizar(r.nome) === nomeExato);
+    if(iRest < 0) iRest = evento.restaurantes.findIndex(r => normalizar(r.nome).includes(nomeExato) || nomeExato.includes(normalizar(r.nome)));
+    if(iRest < 0) iRest = evento.restaurantes.findIndex(r => normalizar(r.nome).replace(/[^a-z0-9]+/g,' ').trim() === nomeSolto);
   }
 
   let iData = -1;
@@ -1832,12 +1835,15 @@ function blocoResultadosHTML(evento){
 
 function blocoGestaoEventoHTML(evento){
   const respostas = evento.respostas || [];
-  const opcoesRestaurante = evento.restaurantes.map((r,i) => `<option value="${i}">${escapar(r.nome)}</option>`).join('');
-  const opcoesData = evento.datas.map((d,i) => `<option value="${i}">${formatarDataPT(d.data)} às ${escapar(d.hora)}</option>`).join('');
-  const linhasResp = respostas.map(r => `
+  const opcoesRestaurante = '<option value="">— escolhe —</option>' + evento.restaurantes.map((r,i) => `<option value="${i}">${escapar(r.nome)}</option>`).join('');
+  const opcoesData = '<option value="">— escolhe —</option>' + evento.datas.map((d,i) => `<option value="${i}">${formatarDataPT(d.data)} às ${escapar(d.hora)}</option>`).join('');
+  const linhasResp = respostas.map((r,i) => `
     <div class="linha-resposta">
       <span><strong>${escapar(r.nome)}</strong> — ${escapar(r.restauranteNome)}${r.avaliacao ? ' · ' + '★'.repeat(r.avaliacao) : ''}</span>
-      <span style="color:var(--cinza)">${r.dataEscolhida ? formatarDataPT(r.dataEscolhida.data) + ' ' + r.dataEscolhida.hora : ''}</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span style="color:var(--cinza)">${r.dataEscolhida ? formatarDataPT(r.dataEscolhida.data) + ' ' + r.dataEscolhida.hora : ''}</span>
+        <button type="button" class="remover-participante" data-acao="remover-resposta" data-idx="${i}" aria-label="Remover esta resposta" title="Remover">✕</button>
+      </span>
     </div>`).join('') || '<div class="vazio-pequeno">Ainda sem respostas registadas.</div>';
 
   const semRestaurantes = evento.restaurantes.length === 0;
@@ -2160,20 +2166,41 @@ async function onCliqueVotacao(ev){
     }
     if(dados.nome) $('respNome').value = dados.nome;
     if(dados.email) $('respEmail').value = dados.email;
-    if(dados.iRest >= 0) $('respRestaurante').value = dados.iRest;
-    if(dados.iData >= 0) $('respData').value = dados.iData;
+    $('respRestaurante').value = dados.iRest >= 0 ? dados.iRest : '';
+    $('respData').value = dados.iData >= 0 ? dados.iData : '';
+
+    const avisos = [];
+    if(dados.iRest < 0) avisos.push('o restaurante');
+    if(dados.iData < 0) avisos.push('o dia');
+    if(avisos.length) alert('Não consegui reconhecer ' + avisos.join(' nem ') + ' automaticamente — escolhe na lista antes de registar, para não ficar errado.');
+  }
+
+  if(acao === 'remover-resposta'){
+    const evento = obterEvento(votacaoAtual.id);
+    if(!evento) return;
+    const idx = +alvo.dataset.idx;
+    const resp = evento.respostas[idx];
+    if(resp && confirm('Remover a resposta de ' + resp.nome + '?')){
+      evento.respostas.splice(idx, 1);
+      guardarEvento(evento);
+      renderizarVotacao();
+    }
   }
 
   if(acao === 'registar-resposta'){
     const nome = $('respNome').value.trim();
     const email = $('respEmail').value.trim();
     if(!nome){ alert('Falta o nome do participante.'); return; }
-    const iRest = +$('respRestaurante').value;
-    const iData = +$('respData').value;
+    const valorRest = $('respRestaurante').value;
+    const valorData = $('respData').value;
+    if(valorRest === ''){ alert('Escolhe o restaurante — o preenchimento automático não teve 100% de certeza, por isso ficou por escolher.'); return; }
+    if(valorData === ''){ alert('Escolhe o dia — o preenchimento automático não teve 100% de certeza, por isso ficou por escolher.'); return; }
+    const iRest = +valorRest;
+    const iData = +valorData;
     const aval = $('respAvaliacao').value ? +$('respAvaliacao').value : null;
 
     const evento = obterEvento(votacaoAtual.id);
-    if(!evento) return;
+    if(!evento || !evento.restaurantes[iRest] || !evento.datas[iData]){ alert('Ocorreu um erro a registar esta resposta — tenta novamente.'); return; }
     evento.respostas = evento.respostas || [];
     evento.respostas.push({
       nome, email,
