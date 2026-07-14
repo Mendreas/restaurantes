@@ -182,6 +182,12 @@ body.tem-barra{padding-bottom:74px}
 
 .linha-resposta{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--linha);font-size:.86rem}
 .linha-resposta:last-child{border-bottom:none}
+.grelha-fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-bottom:10px}
+.foto-item{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--linha);background:var(--fundo)}
+.foto-item img{width:100%;height:100%;object-fit:cover;display:block}
+.remover-foto{position:absolute;top:4px;right:4px;background:rgba(22,40,60,.75);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:.75rem;cursor:pointer;line-height:1}
+.btn-adicionar-foto{display:inline-block;cursor:pointer;background:var(--branco);border:1.5px solid var(--linha);color:var(--tinta);padding:9px 16px;border-radius:8px;font:inherit;font-weight:700;font-size:.85rem}
+.btn-adicionar-foto:hover{border-color:var(--cobalto);color:var(--cobalto)}
 details.gestao summary{cursor:pointer;font-weight:700;color:var(--cobalto);font-size:.88rem;padding:8px 0}
 details.gestao[open] summary{margin-bottom:10px}
 
@@ -913,6 +919,103 @@ function mesclarContactos(...listas){
   return [...mapa.values()];
 }
 
+// ===================== FOTOGRAFIAS DO EVENTO (IndexedDB) =====================
+// As fotos ficam em IndexedDB, não em localStorage — as imagens ocupam demasiado
+// espaço para o limite de ~5MB do localStorage. Guardadas neste dispositivo.
+const DB_FOTOS_NOME = 'mesaMarcadaFotos';
+const DB_FOTOS_STORE = 'fotos';
+let dbFotosPromise = null;
+
+function abrirDBFotos(){
+  if(dbFotosPromise) return dbFotosPromise;
+  dbFotosPromise = new Promise((resolve, reject) => {
+    if(!window.indexedDB){ reject(new Error('IndexedDB indisponível neste navegador')); return; }
+    const req = indexedDB.open(DB_FOTOS_NOME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if(!db.objectStoreNames.contains(DB_FOTOS_STORE)) db.createObjectStore(DB_FOTOS_STORE, { keyPath: 'id' });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return dbFotosPromise;
+}
+
+function comprimirImagem(ficheiro, maxLado = 1280, qualidade = 0.75){
+  return new Promise((resolve, reject) => {
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > height && width > maxLado){ height = Math.round(height * maxLado / width); width = maxLado; }
+        else if(height >= width && height > maxLado){ width = Math.round(width * maxLado / height); height = maxLado; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve({ dataUrl: canvas.toDataURL('image/jpeg', qualidade), largura: width, altura: height });
+      };
+      img.onerror = () => reject(new Error('imagem inválida'));
+      img.src = leitor.result;
+    };
+    leitor.onerror = () => reject(new Error('não foi possível ler o ficheiro'));
+    leitor.readAsDataURL(ficheiro);
+  });
+}
+
+async function guardarFoto(eventoId, info){
+  const db = await abrirDBFotos();
+  const id = eventoId + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_FOTOS_STORE, 'readwrite');
+    tx.objectStore(DB_FOTOS_STORE).put({ id, eventoId, dataUrl: info.dataUrl, largura: info.largura, altura: info.altura, criadoEm: new Date().toISOString() });
+    tx.oncomplete = () => resolve(id);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function obterFotosDoEvento(eventoId){
+  const db = await abrirDBFotos();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(DB_FOTOS_STORE, 'readonly').objectStore(DB_FOTOS_STORE).getAll();
+    req.onsuccess = () => resolve((req.result || []).filter(f => f.eventoId === eventoId));
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function removerFoto(id){
+  const db = await abrirDBFotos();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_FOTOS_STORE, 'readwrite');
+    tx.objectStore(DB_FOTOS_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function removerFotosDoEvento(eventoId){
+  try{
+    const fotos = await obterFotosDoEvento(eventoId);
+    for(const f of fotos) await removerFoto(f.id);
+  }catch(e){ /* ignora — IndexedDB pode estar indisponível */ }
+}
+
+async function carregarFotosEvento(eventoId){
+  const el = $('grelhaFotos');
+  if(!el) return;
+  try{
+    const fotos = await obterFotosDoEvento(eventoId);
+    el.innerHTML = fotos.length
+      ? fotos.map(f => `<div class="foto-item">
+          <img src="${f.dataUrl}" alt="Foto do evento">
+          <button type="button" class="remover-foto" data-id="${f.id}" aria-label="Remover foto">✕</button>
+        </div>`).join('')
+      : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
+  }catch(e){
+    el.innerHTML = '<div class="vazio-pequeno">As fotografias não estão disponíveis neste navegador.</div>';
+  }
+}
+
 // ===================== CODIFICAÇÃO DO LINK DE VOTAÇÃO =====================
 function paraBase64Url(objeto){
   const bytes = new TextEncoder().encode(JSON.stringify(objeto));
@@ -1300,7 +1403,7 @@ function calcularDataVencedora(evento){
 }
 
 // ===================== GERAR PDF DO EVENTO =====================
-function gerarPdfEvento(evento){
+async function gerarPdfEvento(evento){
   if(!window.jspdf){ alert('A biblioteca de PDF ainda está a carregar — tenta novamente daqui a pouco.'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
@@ -1352,6 +1455,31 @@ function gerarPdfEvento(evento){
 
   doc.setFontSize(8); doc.setTextColor(160);
   doc.text('Gerado por Mesa Marcada em ' + new Date().toLocaleString('pt-PT'), 14, 290);
+
+  let fotos = [];
+  try{ fotos = await obterFotosDoEvento(evento.id); }catch(e){ fotos = []; }
+
+  if(fotos.length){
+    doc.addPage();
+    let yf = 20;
+    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(20,40,60);
+    doc.text('Fotografias', 14, yf); yf += 10;
+
+    const caixaL = 85, caixaA = 65, margem = 10;
+    let coluna = 0, x = 14;
+    fotos.forEach(foto => {
+      if(yf + caixaA > 285){ doc.addPage(); yf = 20; }
+      let w = caixaL, h = caixaA;
+      if(foto.largura && foto.altura){
+        const proporcao = foto.largura / foto.altura;
+        if(proporcao > caixaL / caixaA){ w = caixaL; h = caixaL / proporcao; }
+        else{ h = caixaA; w = caixaA * proporcao; }
+      }
+      try{ doc.addImage(foto.dataUrl, 'JPEG', x, yf, w, h); }catch(e){ /* ignora imagem inválida */ }
+      if(coluna === 0){ x = 14 + caixaL + margem; coluna = 1; }
+      else{ x = 14; coluna = 0; yf += caixaA + margem; }
+    });
+  }
 
   const slug = (evento.titulo || 'evento').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
     .replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'evento';
@@ -1415,7 +1543,13 @@ function blocoGestaoEventoHTML(evento){
     <div class="painel-partilha">
       <h3>Gerir este evento ${evento.estado === 'concluido' ? '<span class="etiqueta et-tipo">Concluído</span>' : '<span class="etiqueta et-preco">Aberto</span>'}</h3>
       <button type="button" class="btn-secundario" data-acao="ir-procurar-mais" style="width:100%;margin-bottom:14px">+ Escolher / adicionar restaurantes</button>
-      <div id="listaRespostasGestao">${linhasResp}</div>
+
+      <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Fotografias</label>
+      <div class="grelha-fotos" id="grelhaFotos"><div class="vazio-pequeno">A carregar…</div></div>
+      <label class="btn-adicionar-foto" for="inputFoto">+ Adicionar fotografia</label>
+      <input type="file" id="inputFoto" accept="image/*" hidden>
+
+      <div id="listaRespostasGestao" style="margin-top:16px">${linhasResp}</div>
 
       ${semRestaurantes ? '' : `
       <details class="gestao">
@@ -1555,6 +1689,11 @@ function renderizarVotacao(){
     }
   }
 
+  if(eventoLocal){
+    carregarFotosEvento(eventoLocal.id);
+    $('inputFoto')?.addEventListener('change', onEscolherFoto);
+  }
+
   el.querySelectorAll('input[type=radio]').forEach(inp => {
     const marcar = () => {
       el.querySelectorAll(`input[name="${inp.name}"]`).forEach(i2 => i2.closest('.opcao-radio').classList.toggle('marcada', i2.checked));
@@ -1566,7 +1705,36 @@ function renderizarVotacao(){
   el.onclick = onCliqueVotacao;
 }
 
+async function onEscolherFoto(ev){
+  const ficheiro = ev.target.files[0];
+  if(!ficheiro) return;
+  if(!votacaoAtual || !votacaoAtual.id) return;
+  const eventoLocal = obterEvento(votacaoAtual.id);
+  if(!eventoLocal){ alert('Este evento não foi criado neste dispositivo.'); ev.target.value = ''; return; }
+
+  const label = ev.target.previousElementSibling;
+  const textoOriginal = label ? label.textContent : null;
+  if(label) label.textContent = 'A guardar…';
+
+  try{
+    const info = await comprimirImagem(ficheiro);
+    await guardarFoto(eventoLocal.id, info);
+    await carregarFotosEvento(eventoLocal.id);
+  }catch(e){
+    alert('Não foi possível guardar a fotografia: ' + e.message);
+  }finally{
+    if(label && textoOriginal) label.textContent = textoOriginal;
+    ev.target.value = '';
+  }
+}
+
 function onCliqueVotacao(ev){
+  const btnRemoverFoto = ev.target.closest('.remover-foto');
+  if(btnRemoverFoto){
+    removerFoto(btnRemoverFoto.dataset.id).then(() => votacaoAtual && carregarFotosEvento(votacaoAtual.id));
+    return;
+  }
+
   const linhaRest = ev.target.closest('.opcao-radio[data-grupo="restaurante"]');
   if(linhaRest && votacaoAtual){
     const i = +linhaRest.dataset.i;
@@ -1803,6 +1971,7 @@ function onCliquePreferencias(ev){
 
   if(acao === 'pref-remover-evento'){
     if(confirm('Remover este evento e todas as respostas registadas?')){
+      removerFotosDoEvento(alvo.dataset.id);
       removerEvento(alvo.dataset.id);
       renderizarPreferencias();
     }
@@ -1821,12 +1990,16 @@ function descarregarFicheiro(nome, conteudo, tipo){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
-function exportarJSON(){
+async function exportarJSON(){
+  const eventos = obterEventos();
+  for(const e of eventos){
+    try{ e.fotos = await obterFotosDoEvento(e.id); }catch(err){ e.fotos = []; }
+  }
   const dados = {
-    versao: 1,
+    versao: 2,
     exportadoEm: new Date().toISOString(),
     contactos: obterContactosGuardados(),
-    eventos: obterEventos()
+    eventos
   };
   descarregarFicheiro('mesa-marcada-dados.json', JSON.stringify(dados, null, 2), 'application/json');
 }
@@ -1866,10 +2039,21 @@ function exportarExcel(){
   XLSX.utils.book_append_sheet(wb, wsRespostas, 'Respostas');
   XLSX.writeFile(wb, 'mesa-marcada-dados.xlsx');
 }
-function importarJSONDados(objeto){
+async function importarJSONDados(objeto){
   let n = 0;
   if(Array.isArray(objeto.contactos)) objeto.contactos.forEach(c => { if(c.nome && c.email){ guardarContacto(c.nome, c.email); n++; } });
-  if(Array.isArray(objeto.eventos)) objeto.eventos.forEach(e => { if(e.id){ guardarEvento(e); n++; } });
+  if(Array.isArray(objeto.eventos)){
+    for(const e of objeto.eventos){
+      if(!e.id) continue;
+      const fotos = e.fotos || [];
+      delete e.fotos;
+      guardarEvento(e);
+      n++;
+      for(const f of fotos){
+        try{ await guardarFoto(e.id, { dataUrl: f.dataUrl, largura: f.largura, altura: f.altura }); }catch(err){ /* ignora */ }
+      }
+    }
+  }
   return n;
 }
 function importarDeWorkbook(wb){
@@ -1915,7 +2099,7 @@ async function onImportarFicheiro(ev){
     let n = 0;
     if(/\.json$/i.test(ficheiro.name)){
       const texto = await ficheiro.text();
-      n = importarJSONDados(JSON.parse(texto));
+      n = await importarJSONDados(JSON.parse(texto));
     }else{
       if(!window.XLSX){ alert('A biblioteca de Excel ainda está a carregar — tenta novamente daqui a pouco.'); return; }
       const buffer = await ficheiro.arrayBuffer();
