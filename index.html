@@ -175,6 +175,7 @@ body.tem-barra{padding-bottom:74px}
 .info-data-unica{background:#F4F8FC;border:1.5px solid var(--cobalto);border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:.9rem;color:var(--tinta)}
 .form-voto .campo{margin-bottom:14px}
 .form-voto select{width:100%;padding:9px 10px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.88rem;background:var(--branco)}
+.campo textarea{width:100%;padding:9px 10px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.85rem;resize:vertical;min-height:80px}
 #btnEnviarVoto{width:100%;background:var(--mostarda);color:var(--branco);border:none;padding:13px;border-radius:8px;font:inherit;font-weight:700;font-size:.98rem;cursor:pointer;margin-top:14px}
 #btnEnviarVoto:hover{background:#96690F}
 .voto-erro{color:#A83232;font-size:.85rem;font-weight:600;margin-top:8px}
@@ -1733,6 +1734,31 @@ ${link}
 Obrigado!`;
 }
 
+// Reconhece o formato usado no corpo do e-mail de voto (gerado por esta app) e
+// tenta extrair os campos automaticamente, para não teres de os copiar à mão.
+function analisarEmailVoto(texto, evento){
+  const nome = (texto.match(/Nome:\s*(.+)/i) || [])[1]?.trim() || null;
+  const email = (texto.match(/E-mail:\s*(\S+@\S+)/i) || [])[1]?.trim().replace(/[.,;]+$/, '') || null;
+  const restauranteLinha = (texto.match(/Restaurante escolhido:\s*(.+)/i) || [])[1]?.trim() || null;
+  const dataMatch = texto.match(/Dia escolhido:\s*(\d{2})\/(\d{2})\/(\d{4})\s*às\s*(\d{2}:\d{2})/i);
+
+  let iRest = -1;
+  if(restauranteLinha){
+    const nomeRestaurante = normalizar(restauranteLinha.split(' (')[0].trim());
+    iRest = evento.restaurantes.findIndex(r => normalizar(r.nome) === nomeRestaurante);
+    if(iRest < 0) iRest = evento.restaurantes.findIndex(r => normalizar(r.nome).includes(nomeRestaurante) || nomeRestaurante.includes(normalizar(r.nome)));
+  }
+
+  let iData = -1;
+  if(dataMatch){
+    const [, dia, mes, ano, hora] = dataMatch;
+    const dataISO = `${ano}-${mes}-${dia}`;
+    iData = evento.datas.findIndex(d => d.data === dataISO && d.hora === hora);
+  }
+
+  return { nome, email, iRest, iData };
+}
+
 function blocoGestaoEventoHTML(evento){
   const respostas = evento.respostas || [];
   const opcoesRestaurante = evento.restaurantes.map((r,i) => `<option value="${i}">${escapar(r.nome)}</option>`).join('');
@@ -1760,6 +1786,11 @@ function blocoGestaoEventoHTML(evento){
       ${semRestaurantes ? '' : `
       <details class="gestao">
         <summary>+ Registar resposta recebida (por e-mail, telefone, etc.)</summary>
+        <div class="campo">
+          <label>Colar o texto do e-mail recebido (opcional)</label>
+          <textarea id="respColarEmail" rows="4" placeholder="Cola aqui o corpo do e-mail do voto..."></textarea>
+          <button type="button" class="btn-secundario" data-acao="preencher-de-email" style="width:100%;margin-top:8px">Preencher automaticamente</button>
+        </div>
         <div class="chips-contactos" id="respChipsPessoas" hidden></div>
         <div class="campo"><label>Nome</label><input type="text" id="respNome"></div>
         <div class="campo"><label>E-mail</label><input type="email" id="respEmail"></div>
@@ -2038,6 +2069,22 @@ async function onCliqueVotacao(ev){
       assunto: 'Escolhe o restaurante — ' + (votacaoAtual.titulo || 'reunião'),
       corpo: textoConviteCorpo(votacaoAtual, link)
     });
+  }
+
+  if(acao === 'preencher-de-email'){
+    const texto = $('respColarEmail').value;
+    if(!texto.trim()){ alert('Cola primeiro o texto do e-mail recebido.'); return; }
+    const evento = obterEvento(votacaoAtual.id);
+    if(!evento) return;
+    const dados = analisarEmailVoto(texto, evento);
+    if(!dados.nome && !dados.email){
+      alert('Não consegui reconhecer este texto — confirma que colaste o e-mail do voto, ou preenche os campos à mão.');
+      return;
+    }
+    if(dados.nome) $('respNome').value = dados.nome;
+    if(dados.email) $('respEmail').value = dados.email;
+    if(dados.iRest >= 0) $('respRestaurante').value = dados.iRest;
+    if(dados.iData >= 0) $('respData').value = dados.iData;
   }
 
   if(acao === 'registar-resposta'){
