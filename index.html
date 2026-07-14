@@ -1640,7 +1640,9 @@ function renderizarVotacao(){
       <div class="linha-link">
         <input type="text" readonly value="${escapar(link)}" id="votoLinkInput">
         <button type="button" data-acao="copiar-link">Copiar</button>
+        <button type="button" data-acao="encurtar-link" id="btnEncurtarLink">Encurtar</button>
       </div>
+      <div class="modal-legenda" style="margin:0 0 12px">O link é longo porque leva a lista de restaurantes lá dentro — "Encurtar" cria um atalho tipo tinyurl.com/xxxxx.</div>
       <label>Convidar participantes por e-mail</label>
       <div class="modal-legenda" style="margin:-4px 0 10px">Toca nos nomes para escolher quem convidar</div>
       <div class="chips-contactos" id="convidarChipsPessoas" hidden></div>
@@ -1767,7 +1769,7 @@ async function onEscolherFoto(ev){
   }
 }
 
-function onCliqueVotacao(ev){
+async function onCliqueVotacao(ev){
   const btnRemoverFoto = ev.target.closest('.remover-foto');
   if(btnRemoverFoto){
     removerFoto(btnRemoverFoto.dataset.id).then(() => votacaoAtual && carregarFotosEvento(votacaoAtual.id));
@@ -1802,6 +1804,26 @@ function onCliqueVotacao(ev){
     setTimeout(() => alvo.textContent = 'Copiar', 1800);
   }
 
+  if(acao === 'encurtar-link'){
+    const linkOriginal = $('votoLinkInput').value;
+    if(/^https?:\/\/tinyurl\.com\//.test(linkOriginal)){ return; } // já está encurtado
+    alvo.disabled = true;
+    const textoOriginal = alvo.textContent;
+    alvo.textContent = 'A encurtar…';
+    try{
+      const r = await fetchComLimite('https://tinyurl.com/api-create.php?url=' + encodeURIComponent(linkOriginal), {}, 8000);
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      const curto = (await r.text()).trim();
+      if(!/^https?:\/\/tinyurl\.com\//.test(curto)) throw new Error('resposta inesperada');
+      $('votoLinkInput').value = curto;
+      alvo.textContent = 'Encurtado ✓';
+    }catch(e){
+      alvo.disabled = false;
+      alvo.textContent = textoOriginal;
+      alert('Não foi possível encurtar agora. O link completo em cima já funciona na mesma — podes copiá-lo e usá-lo normalmente.');
+    }
+  }
+
   if(acao === 'ir-procurar-mais'){
     mudarAba('procurar');
   }
@@ -1811,7 +1833,7 @@ function onCliqueVotacao(ev){
     const escritos = $('votoEmailsConvite').value.trim();
     const todosEmails = [...selecionados, ...(escritos ? escritos.split(',').map(s => s.trim()).filter(Boolean) : [])];
     if(!todosEmails.length){ alert('Escolhe pelo menos um participante ou escreve um e-mail.'); return; }
-    const link = linkPartilhavel(votacaoAtual);
+    const link = $('votoLinkInput').value || linkPartilhavel(votacaoAtual);
     window.location.href = construirMailto({
       cc: votacaoAtual.organizadorEmail,
       bcc: todosEmails.join(','),
