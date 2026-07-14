@@ -507,6 +507,8 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
   maxZoom: 20
 }).addTo(mapa);
 
+window.addEventListener('resize', () => mapa.invalidateSize());
+
 let marcadores = [];
 let circuloRaio = null;
 let resultados = [];
@@ -759,6 +761,7 @@ function desenhar(lista, geo, raio, totalBruto){
   limparMapa();
   listaAtual = lista;
   const el = $('lista');
+  mapa.invalidateSize();
 
   if($('procurarPalavra')) $('procurarPalavra').value = '';
   $('semResultadosBusca').hidden = true;
@@ -1403,6 +1406,7 @@ function mudarAba(nome){
   if(nome === 'procurar'){
     atualizarBarraSelecao();
     atualizarAvisoEvento();
+    setTimeout(() => mapa.invalidateSize(), 0);
   }else{
     $('barraSelecao').hidden = true;
     document.body.classList.remove('tem-barra');
