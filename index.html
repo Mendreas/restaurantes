@@ -23,17 +23,9 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Public Sans',system-ui,sans-serif;background:var(--fundo);color:var(--tinta);min-height:100vh}
 
-/* ---------- Cabeçalho com padrão azulejo ---------- */
-header{
-  background:var(--cobalto);
-  color:var(--branco);
-  padding:20px 24px 18px;
-  position:relative;
-  overflow:hidden;
-}
+header{background:var(--cobalto);color:var(--branco);padding:20px 24px 18px;position:relative;overflow:hidden}
 header::before{
-  content:"";
-  position:absolute;inset:0;
+  content:"";position:absolute;inset:0;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23FFFFFF' stroke-opacity='0.13' stroke-width='1.5'%3E%3Cpath d='M24 4 44 24 24 44 4 24Z'/%3E%3Ccircle cx='24' cy='24' r='6'/%3E%3C/g%3E%3C/svg%3E");
   background-size:48px 48px;
 }
@@ -41,47 +33,33 @@ header .inner{position:relative;max-width:1280px;margin:0 auto;display:flex;alig
 header h1{font-family:'Fraunces',serif;font-weight:700;font-size:1.7rem;letter-spacing:.3px}
 header p{font-size:.9rem;opacity:.85}
 
-/* ---------- Abas ---------- */
 .abas{background:var(--cobalto-escuro)}
 .abas .inner{max-width:1280px;margin:0 auto;display:flex;gap:2px;padding:0 24px;overflow-x:auto}
 .aba-btn{background:transparent;border:none;color:#C9D8E8;font:inherit;font-weight:700;font-size:.9rem;padding:14px 18px;cursor:pointer;border-bottom:3px solid transparent;display:flex;align-items:center;gap:7px;white-space:nowrap}
 .aba-btn.ativa{color:var(--branco);border-bottom-color:var(--mostarda)}
 .contador-aba{background:var(--mostarda);color:var(--branco);font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:20px;line-height:1.5}
 
-/* ---------- Barra de filtros ---------- */
-.filtros{
-  background:var(--branco);
-  border-bottom:1px solid var(--linha);
-  padding:16px 24px;
-}
+.filtros{background:var(--branco);border-bottom:1px solid var(--linha);padding:16px 24px}
 .filtros .inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1.4fr 1.4fr 1fr auto;gap:12px;align-items:end}
 .campo label{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:5px}
-.campo input,.campo select{
-  width:100%;padding:10px 12px;border:1.5px solid var(--linha);border-radius:8px;
-  font:inherit;font-size:.92rem;background:var(--branco);color:var(--tinta);
-}
+.campo input,.campo select{width:100%;padding:10px 12px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.92rem;background:var(--branco);color:var(--tinta)}
 .campo input:focus,.campo select:focus{outline:2px solid var(--cobalto);outline-offset:1px;border-color:var(--cobalto)}
-#btnProcurar{
-  padding:11px 26px;border:none;border-radius:8px;background:var(--cobalto);color:var(--branco);
-  font:inherit;font-size:.95rem;font-weight:700;cursor:pointer;white-space:nowrap;
-}
+#btnProcurar{padding:11px 26px;border:none;border-radius:8px;background:var(--cobalto);color:var(--branco);font:inherit;font-size:.95rem;font-weight:700;cursor:pointer;white-space:nowrap}
 #btnProcurar:hover{background:var(--cobalto-escuro)}
 #btnProcurar:disabled{background:var(--cinza);cursor:wait}
 
-/* ---------- Estado / mensagens ---------- */
+#avisoEventoAtivo{max-width:1280px;margin:14px auto 0;padding:10px 16px;font-size:.85rem;background:#F4F8FC;border:1px solid #C9D8E8;border-radius:8px;color:var(--cobalto-escuro)}
+#avisoEventoAtivo.sem-evento{background:#FFF6E4;border-color:#EBD9A8;color:#7A5A0F}
+
 #estado{max-width:1280px;margin:14px auto 0;padding:0 24px;font-size:.9rem;color:var(--cinza)}
 #estado .erro{color:#A83232;font-weight:600}
 #estado .aviso{background:#FFF6E4;border:1px solid #EBD9A8;border-radius:8px;padding:10px 14px;display:inline-block}
 
-/* ---------- Corpo: lista + mapa ---------- */
 .corpo{max-width:1280px;margin:16px auto 40px;padding:0 24px;display:grid;grid-template-columns:440px 1fr;gap:18px;align-items:start}
 #mapa{height:78vh;min-height:420px;border-radius:12px;border:1px solid var(--linha);box-shadow:var(--sombra);position:sticky;top:12px;z-index:1}
 #lista{display:flex;flex-direction:column;gap:12px;max-height:78vh;overflow-y:auto;padding-right:4px}
 
-.cartao{
-  background:var(--branco);border:1px solid var(--linha);border-radius:12px;
-  padding:16px 18px;box-shadow:var(--sombra);cursor:pointer;transition:border-color .15s;
-}
+.cartao{background:var(--branco);border:1px solid var(--linha);border-radius:12px;padding:16px 18px;box-shadow:var(--sombra);cursor:pointer;transition:border-color .15s}
 .cartao:hover{border-color:var(--cobalto)}
 .cartao.ativo{border:2px solid var(--cobalto)}
 .cartao-cabecalho{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
@@ -99,10 +77,7 @@ header p{font-size:.9rem;opacity:.85}
 .detalhe a{color:var(--cobalto);text-decoration:none;font-weight:600}
 .detalhe a:hover{text-decoration:underline}
 .acoes{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.acoes a,.acoes button{
-  flex:1;min-width:120px;text-align:center;font-size:.82rem;font-weight:700;
-  padding:8px 10px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;font-family:inherit;
-}
+.acoes a,.acoes button{flex:1;min-width:120px;text-align:center;font-size:.82rem;font-weight:700;padding:8px 10px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;font-family:inherit}
 .a-google{background:var(--cobalto);color:var(--branco)}
 .a-trip{background:var(--verde);color:var(--branco)}
 .a-google:hover{background:var(--cobalto-escuro)}
@@ -111,13 +86,11 @@ header p{font-size:.9rem;opacity:.85}
 .vazio{background:var(--branco);border:1px dashed var(--linha);border-radius:12px;padding:40px 20px;text-align:center;color:var(--cinza);font-size:.95rem}
 .vazio-pequeno{background:var(--fundo);border-radius:8px;padding:14px;text-align:center;color:var(--cinza);font-size:.85rem}
 
-/* ---------- Marcador azulejo no mapa ---------- */
 .marcador{width:22px;height:22px;background:var(--cobalto);transform:rotate(45deg);border:2.5px solid var(--branco);border-radius:4px;box-shadow:0 1px 5px rgba(0,0,0,.4)}
 .marcador.ativo{background:var(--mostarda)}
 .leaflet-popup-content{font-family:'Public Sans',sans-serif;font-size:.88rem}
 .leaflet-popup-content b{font-family:'Fraunces',serif;font-size:1rem;color:var(--cobalto-escuro)}
 
-/* ---------- Barra flutuante de seleção ---------- */
 body.tem-barra{padding-bottom:74px}
 .barra-selecao{position:fixed;left:0;right:0;bottom:0;background:var(--cobalto-escuro);box-shadow:0 -2px 10px rgba(0,0,0,.25);z-index:500;padding:12px 24px}
 .barra-selecao .inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;color:var(--branco)}
@@ -125,7 +98,6 @@ body.tem-barra{padding-bottom:74px}
 #btnColocarVotacao{background:var(--mostarda);color:var(--branco);border:none;padding:11px 20px;border-radius:8px;font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;white-space:nowrap}
 #btnColocarVotacao:hover{background:#96690F}
 
-/* ---------- Modais ---------- */
 .modal-overlay{position:fixed;inset:0;background:rgba(22,40,60,.55);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
 .modal-overlay[hidden]{display:none}
 .modal-caixa{background:var(--branco);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:24px;box-shadow:var(--sombra)}
@@ -148,13 +120,11 @@ body.tem-barra{padding-bottom:74px}
 .modal-erro{color:#A83232;font-size:.85rem;font-weight:600;margin-top:6px}
 .modal-legenda{font-size:.78rem;color:var(--cinza);margin:-8px 0 12px}
 
-/* Chips de contactos guardados */
 .chips-contactos{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
 .chips-contactos[hidden]{display:none}
 .chip-contacto{background:var(--fundo);border:1.5px solid var(--linha);color:var(--tinta);font:inherit;font-size:.82rem;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer}
 .chip-contacto:hover{border-color:var(--cobalto);color:var(--cobalto)}
 
-/* ---------- Aba Votação / Preferências (layout partilhado) ---------- */
 .votacao-wrap{max-width:720px;margin:0 auto;padding:24px}
 .votacao-vazio{background:var(--branco);border:1px dashed var(--linha);border-radius:12px;padding:48px 24px;text-align:center;color:var(--cinza)}
 .votacao-vazio button{margin-top:16px}
@@ -191,26 +161,29 @@ body.tem-barra{padding-bottom:74px}
 .confirmacao-voto{background:#EEF6EF;border:1.5px solid var(--verde);border-radius:12px;padding:18px;margin-top:16px;font-size:.9rem;color:var(--tinta)}
 .confirmacao-voto textarea{width:100%;margin-top:10px;padding:10px;border:1px solid var(--linha);border-radius:8px;font:inherit;font-size:.8rem;min-height:110px;background:var(--fundo);color:var(--tinta)}
 
-/* Painel de gestão do evento (dentro da aba Votação, visível só para quem criou) */
 .linha-resposta{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--linha);font-size:.86rem}
 .linha-resposta:last-child{border-bottom:none}
 details.gestao summary{cursor:pointer;font-weight:700;color:var(--cobalto);font-size:.88rem;padding:8px 0}
 details.gestao[open] summary{margin-bottom:10px}
 
-/* ---------- Modal detalhe do restaurante ---------- */
 .mdr-nota{font-size:.85rem;color:var(--cinza);margin:14px 0 10px}
 
-/* ---------- Aba Preferências ---------- */
 .linha-lista{display:grid;grid-template-columns:1fr 1.3fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--linha);font-size:.88rem}
 .linha-lista:last-child{border-bottom:none}
 .linha-lista .nome{font-weight:600}
 .linha-lista .email{color:var(--cinza);font-size:.84rem}
 .cartao-evento{border:1px solid var(--linha);border-radius:10px;padding:14px;margin-bottom:10px}
+.cartao-evento[data-acao]{cursor:pointer;transition:border-color .15s}
+.cartao-evento[data-acao]:hover{border-color:var(--cobalto)}
 .cartao-evento .titulo-evento{font-weight:700;color:var(--tinta)}
 .cartao-evento .meta-evento{font-size:.82rem;color:var(--cinza);margin:6px 0 10px}
 input[type=file]{font:inherit;font-size:.85rem}
 
-/* ---------- Responsivo (iPad / telemóvel) ---------- */
+.inicio-hero{text-align:center;padding:8px 0 26px}
+.inicio-hero h2{font-family:'Fraunces',serif;font-size:1.4rem;color:var(--cobalto-escuro);margin-bottom:6px}
+.inicio-hero p{color:var(--cinza);font-size:.92rem}
+#btnNovoEvento{width:100%;padding:15px;font-size:1rem;margin-top:6px}
+
 @media (max-width:1000px){
   .filtros .inner{grid-template-columns:1fr 1fr;gap:10px}
   #btnProcurar{grid-column:1 / -1}
@@ -234,14 +207,20 @@ input[type=file]{font:inherit;font-size:.85rem}
 
 <nav class="abas">
   <div class="inner">
-    <button class="aba-btn ativa" id="btnAbaProcurar" type="button">🔍 Procurar</button>
+    <button class="aba-btn ativa" id="btnAbaInicio" type="button">🏠 Início</button>
+    <button class="aba-btn" id="btnAbaProcurar" type="button">🔍 Procurar</button>
     <button class="aba-btn" id="btnAbaVotacao" type="button">🗳️ Votação <span class="contador-aba" id="contadorAbaVotacao" hidden>0</span></button>
     <button class="aba-btn" id="btnAbaPreferencias" type="button">⚙️ Preferências</button>
   </div>
 </nav>
 
+<!-- ===================== ABA: INÍCIO ===================== -->
+<div id="aba-inicio">
+  <div class="votacao-wrap" id="inicioConteudo"></div>
+</div>
+
 <!-- ===================== ABA: PROCURAR ===================== -->
-<div id="aba-procurar">
+<div id="aba-procurar" hidden>
 
   <div class="filtros">
     <div class="inner">
@@ -307,6 +286,7 @@ input[type=file]{font:inherit;font-size:.85rem}
     </div>
   </div>
 
+  <div id="avisoEventoAtivo"></div>
   <div id="estado"></div>
 
   <div class="corpo">
@@ -318,11 +298,10 @@ input[type=file]{font:inherit;font-size:.85rem}
 
 </div>
 
-<!-- Barra flutuante de seleção -->
 <div class="barra-selecao" id="barraSelecao" hidden>
   <div class="inner">
-    <span class="contagem" id="contagemSelecao">0 restaurantes selecionados</span>
-    <button id="btnColocarVotacao" type="button">Colocar a votação →</button>
+    <span class="contagem" id="contagemSelecao">0 restaurantes no evento</span>
+    <button id="btnColocarVotacao" type="button">Ver votação →</button>
   </div>
 </div>
 
@@ -336,10 +315,10 @@ input[type=file]{font:inherit;font-size:.85rem}
   <div class="votacao-wrap" id="preferenciasConteudo"></div>
 </div>
 
-<!-- ===================== MODAL: CRIAR VOTAÇÃO ===================== -->
+<!-- ===================== MODAL: CRIAR NOVO EVENTO ===================== -->
 <div class="modal-overlay" id="modalVotacao" hidden>
   <div class="modal-caixa">
-    <h2>Colocar a votação</h2>
+    <h2>Criar novo evento</h2>
 
     <div class="mv-lista-restaurantes" id="mvListaRestaurantes"></div>
 
@@ -356,7 +335,7 @@ input[type=file]{font:inherit;font-size:.85rem}
       <input id="mvEmailOrganizador" type="email" placeholder="tu@navportugal.pt">
     </div>
 
-    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Data(s) e hora(s) propostas</label>
+    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Data(s) e hora(s) do evento</label>
     <div id="mvDatas"></div>
     <button id="mvAddData" type="button">+ Adicionar outra data/hora</button>
 
@@ -370,7 +349,7 @@ input[type=file]{font:inherit;font-size:.85rem}
 
     <div class="modal-acoes">
       <button class="btn-secundario" id="mvCancelar" type="button">Cancelar</button>
-      <button class="btn-primario" id="mvCriar" type="button">Criar votação</button>
+      <button class="btn-primario" id="mvCriar" type="button">Criar e escolher restaurantes →</button>
     </div>
   </div>
 </div>
@@ -396,7 +375,7 @@ input[type=file]{font:inherit;font-size:.85rem}
 "use strict";
 
 // ---------------- Mapa ----------------
-const mapa = L.map('mapa').setView([39.5, -8.0], 7); // Portugal
+const mapa = L.map('mapa').setView([39.5, -8.0], 7);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap'
 }).addTo(mapa);
@@ -406,9 +385,7 @@ let circuloRaio = null;
 let resultados = [];
 let listaAtual = [];
 
-// Seleção para votação (persiste entre pesquisas), chave = id OSM
-let selecionadosMapa = new Map();
-// Votação atual (criada agora ou carregada de um link)
+// Evento/votação atualmente em edição ou em visualização
 let votacaoAtual = null;
 
 // ---------------- Utilidades ----------------
@@ -420,14 +397,11 @@ function distanciaKm(lat1, lon1, lat2, lon2){
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-
 function escapar(t){
   return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-
 function estado(html){ $('estado').innerHTML = html; }
 
-// Nomes de cozinha OSM → português
 const NOMES_COZINHA = {
   portuguese:'Portuguesa', regional:'Regional', seafood:'Marisco', fish:'Peixe',
   steak_house:'Grelhados', grill:'Grelhados', barbecue:'Churrasco',
@@ -442,7 +416,6 @@ const NOMES_COZINHA = {
   greek:'Grega', turkish:'Turca', lebanese:'Libanesa', coffee_shop:'Café',
   alentejan:'Alentejana', madeiran:'Madeirense', azorean:'Açoreana', algarve:'Algarvia'
 };
-
 function cozinhaLegivel(tag){
   if(!tag) return null;
   return tag.split(';').map(c => {
@@ -450,8 +423,6 @@ function cozinhaLegivel(tag){
     return NOMES_COZINHA[c] || (c.charAt(0).toUpperCase() + c.slice(1).replace(/_/g,' '));
   }).join(' · ');
 }
-
-// Classificar tipo de restaurante (heurística com tags e nome)
 function classificarTipo(tags){
   const nome = (tags.name || '').toLowerCase();
   if(tags.amenity === 'fast_food') return 'rapido';
@@ -461,29 +432,22 @@ function classificarTipo(tags){
   return 'restaurante';
 }
 const NOME_TIPO = { tasca:'Tasca / Taberna', restaurante:'Restaurante', fino:'Fine dining', rapido:'Comida rápida' };
-
-// Nível de preço a partir de tags OSM (quando existe)
 function nivelPreco(tags){
   const p = tags['price'] || tags['price:range'] || tags['charge'] || '';
   if(/€€€|\$\$\$|expensive|3/.test(p)) return 3;
   if(/€€|\$\$|moderate|2/.test(p)) return 2;
   if(/€|\$|cheap|inexpensive|1/.test(p)) return 1;
-  return null; // sem informação
+  return null;
 }
-
-// Cozinhas regionais portuguesas: o OpenStreetMap raramente as distingue na tag
-// "cuisine", por isso procuramos também estas palavras no nome do restaurante.
 const REGIONAL_PT = {
   alentejan: ['alentejana','alentejano','alentejo'],
   madeiran: ['madeirense','madeira'],
   azorean: ['acoriana','acoreana','acores','azores'],
   algarve: ['algarvia','algarvio','algarve']
 };
-
 function normalizar(t){
   return (t || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 }
-
 function morada(tags){
   const partes = [];
   const rua = [tags['addr:street'], tags['addr:housenumber']].filter(Boolean).join(' ');
@@ -516,17 +480,12 @@ const ENDPOINTS_OVERPASS = [
   'https://overpass.private.coffee/api/interpreter',
   'https://overpass.openstreetmap.ru/api/interpreter'
 ];
-
 async function fetchComLimite(url, opcoes, limiteMs){
   const controlador = new AbortController();
   const temporizador = setTimeout(() => controlador.abort(), limiteMs);
-  try{
-    return await fetch(url, { ...opcoes, signal: controlador.signal });
-  }finally{
-    clearTimeout(temporizador);
-  }
+  try{ return await fetch(url, { ...opcoes, signal: controlador.signal }); }
+  finally{ clearTimeout(temporizador); }
 }
-
 async function procurarRestaurantes(lat, lon, raio, avisar){
   const query = `[out:json][timeout:25];
 (
@@ -534,7 +493,6 @@ async function procurarRestaurantes(lat, lon, raio, avisar){
   way["amenity"~"^(restaurant|fast_food)$"](around:${raio},${lat},${lon});
 );
 out center tags;`;
-
   let ultimoErro = null;
   for(let i = 0; i < ENDPOINTS_OVERPASS.length; i++){
     const ep = ENDPOINTS_OVERPASS[i];
@@ -619,16 +577,18 @@ async function pesquisar(){
   }
 }
 
-// ---------------- Apresentação ----------------
+// ---------------- Apresentação da lista/mapa ----------------
 function limparMapa(){
   marcadores.forEach(m => mapa.removeLayer(m));
   marcadores = [];
   if(circuloRaio){ mapa.removeLayer(circuloRaio); circuloRaio = null; }
 }
-
 function iconeMarcador(ativo){
-  return L.divIcon({ className:'', html:'<div class="marcador' + (ativo?' ativo':'') + '"></div>',
-    iconSize:[22,22], iconAnchor:[11,11] });
+  return L.divIcon({ className:'', html:'<div class="marcador' + (ativo?' ativo':'') + '"></div>', iconSize:[22,22], iconAnchor:[11,11] });
+}
+
+function restauranteEstaNoEvento(id){
+  return !!(votacaoAtual && votacaoAtual.restaurantes.some(x => x.id === id));
 }
 
 function desenhar(lista, geo, raio, totalBruto){
@@ -658,12 +618,12 @@ function desenhar(lista, geo, raio, totalBruto){
 
     const qGoogle = encodeURIComponent(r.nome + ' restaurante ' + (r.morada || geoNomeCurto(geo)));
     const qTrip   = encodeURIComponent(r.nome + ' ' + geoNomeCurto(geo));
-    const selecionado = selecionadosMapa.has(r.id);
+    const selecionado = restauranteEstaNoEvento(r.id);
 
     return `<div class="cartao" data-i="${i}" id="cartao-${i}">
       <div class="cartao-cabecalho">
         <h3>${escapar(r.nome)}</h3>
-        <button type="button" class="btn-selecionar${selecionado?' selecionado':''}" data-id="${r.id}">${selecionado ? '★ Selecionado' : '☆ Selecionar'}</button>
+        <button type="button" class="btn-selecionar${selecionado?' selecionado':''}" data-id="${r.id}">${selecionado ? '★ No evento' : '☆ Adicionar'}</button>
       </div>
       <div class="etiquetas">
         ${r.cozinha ? '<span class="etiqueta et-cozinha">' + escapar(r.cozinha) + '</span>' : ''}
@@ -706,9 +666,7 @@ function desenhar(lista, geo, raio, totalBruto){
   const grupo = L.featureGroup(marcadores.concat(circuloRaio));
   mapa.fitBounds(grupo.getBounds().pad(0.1));
 }
-
 function geoNomeCurto(geo){ return geo.nome.split(',')[0]; }
-
 function selecionar(i, lista, centrar){
   document.querySelectorAll('.cartao').forEach(c => c.classList.remove('ativo'));
   const cartao = $('cartao-' + i);
@@ -718,7 +676,7 @@ function selecionar(i, lista, centrar){
   marcadores[i].openPopup();
 }
 
-// ===================== SELEÇÃO PARA VOTAÇÃO =====================
+// ===================== ESCOLHA DE RESTAURANTES PARA O EVENTO ATUAL =====================
 function dadosResumidos(r){
   return {
     id: r.id, nome: r.nome, morada: r.morada, cozinha: r.cozinha,
@@ -728,32 +686,64 @@ function dadosResumidos(r){
 }
 
 function alternarSelecao(r, btn){
-  if(selecionadosMapa.has(r.id)){
-    selecionadosMapa.delete(r.id);
-    if(btn){ btn.classList.remove('selecionado'); btn.textContent = '☆ Selecionar'; }
-  }else{
-    selecionadosMapa.set(r.id, dadosResumidos(r));
-    if(btn){ btn.classList.add('selecionado'); btn.textContent = '★ Selecionado'; }
+  if(!votacaoAtual){
+    alert('Cria ou escolhe um evento em Início antes de adicionares restaurantes.');
+    return;
   }
+  if(!obterEvento(votacaoAtual.id)){
+    alert('Este evento não foi criado neste dispositivo — não é possível editar os restaurantes aqui.');
+    return;
+  }
+  const idx = votacaoAtual.restaurantes.findIndex(x => x.id === r.id);
+  if(idx >= 0){
+    votacaoAtual.restaurantes.splice(idx, 1);
+    if(btn){ btn.classList.remove('selecionado'); btn.textContent = '☆ Adicionar'; }
+  }else{
+    votacaoAtual.restaurantes.push(dadosResumidos(r));
+    if(btn){ btn.classList.add('selecionado'); btn.textContent = '★ No evento'; }
+  }
+  sincronizarEventoAtual();
   atualizarBarraSelecao();
 }
 
+function sincronizarEventoAtual(){
+  if(!votacaoAtual || !votacaoAtual.id) return;
+  const evt = obterEvento(votacaoAtual.id);
+  if(evt){
+    evt.restaurantes = votacaoAtual.restaurantes;
+    guardarEvento(evt);
+  }
+}
+
 function atualizarBarraSelecao(){
-  const n = selecionadosMapa.size;
   const barra = $('barraSelecao');
+  const n = votacaoAtual ? votacaoAtual.restaurantes.length : 0;
   if(n > 0){
     barra.hidden = false;
     document.body.classList.add('tem-barra');
-    $('contagemSelecao').textContent = n + ' restaurante' + (n>1?'s':'') + ' selecionado' + (n>1?'s':'');
+    $('contagemSelecao').textContent = n + ' restaurante' + (n>1?'s':'') + ' no evento';
   }else{
     barra.hidden = true;
     document.body.classList.remove('tem-barra');
   }
 }
 
+function atualizarAvisoEvento(){
+  const el = $('avisoEventoAtivo');
+  if(!el) return;
+  if(votacaoAtual){
+    el.hidden = false;
+    el.classList.remove('sem-evento');
+    el.innerHTML = 'A escolher restaurantes para: <b>' + escapar(votacaoAtual.titulo || 'evento sem título') + '</b>' +
+      (votacaoAtual.datas && votacaoAtual.datas[0] ? ' · ' + formatarDataPT(votacaoAtual.datas[0].data) : '');
+  }else{
+    el.hidden = false;
+    el.classList.add('sem-evento');
+    el.innerHTML = 'Sem evento ativo — vai a <b>Início</b> para criar ou abrir um evento antes de escolheres restaurantes.';
+  }
+}
+
 // ===================== DADOS GUARDADOS NESTE DISPOSITIVO =====================
-// localStorage — não é partilhado entre dispositivos. Guarda: contactos conhecidos,
-// último organizador usado, e o histórico de eventos criados neste dispositivo.
 const CHAVE_CONTACTOS = 'mesaMarcada_contactos_v1';
 const CHAVE_ORGANIZADOR = 'mesaMarcada_organizador_v1';
 const CHAVE_EVENTOS = 'mesaMarcada_eventos_v1';
@@ -771,7 +761,7 @@ function guardarContacto(nome, email){
     if(existente >= 0) lista[existente] = { nome: nome.trim(), email: email.trim() };
     else lista.push({ nome: nome.trim(), email: email.trim() });
     localStorage.setItem(CHAVE_CONTACTOS, JSON.stringify(lista.slice(-80)));
-  }catch(e){ /* ignora — localStorage indisponível */ }
+  }catch(e){ /* localStorage indisponível — degrada em silêncio */ }
 }
 function removerContactoGuardado(email){
   try{
@@ -779,7 +769,6 @@ function removerContactoGuardado(email){
     localStorage.setItem(CHAVE_CONTACTOS, JSON.stringify(lista));
   }catch(e){ /* ignora */ }
 }
-
 function obterOrganizadorGuardado(){
   try{ const raw = localStorage.getItem(CHAVE_ORGANIZADOR); return raw ? JSON.parse(raw) : null; }
   catch(e){ return null; }
@@ -787,7 +776,6 @@ function obterOrganizadorGuardado(){
 function guardarOrganizador(nome, email){
   try{ localStorage.setItem(CHAVE_ORGANIZADOR, JSON.stringify({ nome, email })); }catch(e){ /* ignora */ }
 }
-
 function obterEventos(){
   try{ const raw = localStorage.getItem(CHAVE_EVENTOS); return raw ? JSON.parse(raw) : []; }
   catch(e){ return []; }
@@ -838,7 +826,7 @@ function gerarIdEvento(){
   return 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 }
 
-// ===================== MODAL: CRIAR VOTAÇÃO =====================
+// ===================== MODAL: CRIAR NOVO EVENTO =====================
 function linhaDataHTML(data, hora){
   return `<div class="linha-data">
     <input type="date" class="mv-data" value="${data||''}">
@@ -872,12 +860,8 @@ function renderizarChipsContactos(containerId, aoClicar){
   );
 }
 
-function abrirModalVotacao(){
-  if(selecionadosMapa.size === 0) return;
-
-  $('mvListaRestaurantes').innerHTML = '<strong>Restaurantes selecionados (' + selecionadosMapa.size + ')</strong><ul>' +
-    [...selecionadosMapa.values()].map(r => '<li>' + escapar(r.nome) + '</li>').join('') + '</ul>';
-
+function abrirModalNovoEvento(){
+  $('mvListaRestaurantes').innerHTML = '<div class="modal-legenda" style="margin:0">Depois de criares o evento, vais escolher os restaurantes na aba Procurar.</div>';
   const org = obterOrganizadorGuardado();
   $('mvTitulo').value = '';
   $('mvNomeOrganizador').value = org?.nome || '';
@@ -886,7 +870,6 @@ function abrirModalVotacao(){
   $('mvParticipantes').innerHTML = '';
   renderizarChipsContactos('mvParticipantesGuardados', adicionarLinhaParticipanteSeNovo);
   $('mvErro').hidden = true;
-
   $('modalVotacao').hidden = false;
 }
 function fecharModalVotacao(){ $('modalVotacao').hidden = true; }
@@ -927,7 +910,7 @@ $('mvCriar').addEventListener('click', () => {
     if(d && h) datas.push({ id:'d'+i, data:d, hora:h });
   });
   if(datas.length === 0){
-    erroEl.textContent = 'Indica pelo menos uma data e hora completas.';
+    erroEl.textContent = 'Indica a data e hora do evento.';
     erroEl.hidden = false; return;
   }
   erroEl.hidden = true;
@@ -952,48 +935,107 @@ $('mvCriar').addEventListener('click', () => {
     organizadorNome: nomeOrganizador,
     organizadorEmail: email,
     criadoEm: new Date().toISOString(),
-    restaurantes: [...selecionadosMapa.values()],
+    restaurantes: [],
     datas,
     participantesConhecidos: participantes
   };
 
   guardarEvento({
     id: idEvento, titulo, organizadorNome: nomeOrganizador, organizadorEmail: email,
-    criadoEm: votacaoAtual.criadoEm, restaurantes: votacaoAtual.restaurantes, datas,
+    criadoEm: votacaoAtual.criadoEm, restaurantes: [], datas,
     participantesConhecidos: participantes, respostas: [], estado: 'aberto', resultadoFinal: null
   });
 
   location.hash = 'v=' + paraBase64Url(votacaoAtual);
   fecharModalVotacao();
-  renderizarVotacao();
-  mudarAba('votacao');
+  mudarAba('procurar');
 });
 
 // ===================== ABAS =====================
 function mudarAba(nome){
+  $('aba-inicio').hidden = nome !== 'inicio';
   $('aba-procurar').hidden = nome !== 'procurar';
   $('aba-votacao').hidden = nome !== 'votacao';
   $('aba-preferencias').hidden = nome !== 'preferencias';
+  $('btnAbaInicio').classList.toggle('ativa', nome === 'inicio');
   $('btnAbaProcurar').classList.toggle('ativa', nome === 'procurar');
   $('btnAbaVotacao').classList.toggle('ativa', nome === 'votacao');
   $('btnAbaPreferencias').classList.toggle('ativa', nome === 'preferencias');
   if(nome === 'procurar'){
     atualizarBarraSelecao();
+    atualizarAvisoEvento();
   }else{
     $('barraSelecao').hidden = true;
     document.body.classList.remove('tem-barra');
   }
 }
+$('btnAbaInicio').addEventListener('click', () => { renderizarInicio(); mudarAba('inicio'); });
 $('btnAbaProcurar').addEventListener('click', () => mudarAba('procurar'));
 $('btnAbaVotacao').addEventListener('click', () => {
-  if(!votacaoAtual) renderizarVotacao();
+  if(!votacaoAtual){ renderizarVotacao(); }
   mudarAba('votacao');
 });
 $('btnAbaPreferencias').addEventListener('click', () => {
   renderizarPreferencias();
   mudarAba('preferencias');
 });
-$('btnColocarVotacao').addEventListener('click', abrirModalVotacao);
+$('btnColocarVotacao').addEventListener('click', () => {
+  renderizarVotacao();
+  mudarAba('votacao');
+});
+
+// ===================== ABA INÍCIO =====================
+function cartaoEventoInicioHTML(e){
+  const nRest = (e.restaurantes||[]).length;
+  const nResp = (e.respostas||[]).length;
+  const dataResumo = e.datas && e.datas[0] ? formatarDataPT(e.datas[0].data) + (e.datas.length>1 ? ' (+' + (e.datas.length-1) + ')' : '') : '-';
+  return `<div class="cartao-evento" data-acao="ir-para-evento" data-id="${e.id}">
+    <div class="titulo-evento">${escapar(e.titulo || 'Sem título')}</div>
+    <div class="meta-evento">${dataResumo} · ${nRest} restaurante${nRest!==1?'s':''} · ${nResp} resposta${nResp!==1?'s':''}</div>
+  </div>`;
+}
+
+function renderizarInicio(){
+  const el = $('inicioConteudo');
+  const eventos = obterEventos();
+  const abertos = eventos.filter(e => e.estado !== 'concluido');
+  const concluidos = eventos.filter(e => e.estado === 'concluido');
+
+  el.innerHTML = `
+    <div class="inicio-hero">
+      <h2>O que queres fazer?</h2>
+      <p>Escolhe um evento a decorrer, revê um encontro anterior, ou cria um novo.</p>
+    </div>
+
+    <div class="painel-partilha">
+      <h3>Eventos a decorrer (${abertos.length})</h3>
+      ${abertos.length ? abertos.map(cartaoEventoInicioHTML).join('') : '<div class="vazio-pequeno">Nenhum evento em aberto.</div>'}
+    </div>
+
+    <div class="painel-partilha">
+      <h3>Encontros anteriores (${concluidos.length})</h3>
+      ${concluidos.length ? concluidos.map(cartaoEventoInicioHTML).join('') : '<div class="vazio-pequeno">Ainda não há encontros concluídos.</div>'}
+    </div>
+
+    <button class="btn-primario" type="button" id="btnNovoEvento">+ Criar novo evento</button>
+  `;
+  el.onclick = onCliqueInicio;
+  $('btnNovoEvento').addEventListener('click', abrirModalNovoEvento);
+}
+
+function onCliqueInicio(ev){
+  const alvo = ev.target.closest('[data-acao="ir-para-evento"]');
+  if(!alvo) return;
+  const evt = obterEvento(alvo.dataset.id);
+  if(evt){
+    votacaoAtual = {
+      id: evt.id, titulo: evt.titulo, organizadorNome: evt.organizadorNome, organizadorEmail: evt.organizadorEmail,
+      criadoEm: evt.criadoEm, restaurantes: evt.restaurantes, datas: evt.datas, participantesConhecidos: evt.participantesConhecidos
+    };
+    renderizarVotacao();
+    mudarAba('votacao');
+  }
+}
 
 // ===================== MODAL: DETALHE DO RESTAURANTE =====================
 function abrirDetalheRestaurante(r){
@@ -1003,7 +1045,6 @@ function abrirDetalheRestaurante(r){
     '<span class="etiqueta et-tipo">' + NOME_TIPO[r.tipo] + '</span>',
     '<span class="etiqueta et-preco">' + (r.preco ? '€'.repeat(r.preco) : 'preço s/ info') + '</span>'
   ].join('');
-
   const linhas = [];
   if(r.morada)   linhas.push('<span class="rotulo">Morada:</span> ' + escapar(r.morada));
   if(r.telefone) linhas.push('<span class="rotulo">Telefone:</span> <a href="tel:' + escapar(r.telefone.replace(/\s/g,'')) + '">' + escapar(r.telefone) + '</a>');
@@ -1124,7 +1165,7 @@ function construirMailto({ to='', cc='', bcc='', assunto='', corpo='' }){
   return 'mailto:' + to + (partes.length ? '?' + partes.join('&') : '');
 }
 function textoConviteCorpo(votacao, link){
-  const listaRest = votacao.restaurantes.map(r => '- ' + r.nome + (r.morada ? ' (' + r.morada + ')' : '')).join('\n');
+  const listaRest = votacao.restaurantes.map(r => '- ' + r.nome + (r.morada ? ' (' + r.morada + ')' : '')).join('\n') || '(ainda sem restaurantes propostos)';
   const listaDatas = votacao.datas.map(d => '- ' + formatarDataPT(d.data) + ' às ' + d.hora).join('\n');
   return `Olá!
 
@@ -1152,11 +1193,15 @@ function blocoGestaoEventoHTML(evento){
       <span style="color:var(--cinza)">${r.dataEscolhida ? formatarDataPT(r.dataEscolhida.data) + ' ' + r.dataEscolhida.hora : ''}</span>
     </div>`).join('') || '<div class="vazio-pequeno">Ainda sem respostas registadas.</div>';
 
+  const semRestaurantes = evento.restaurantes.length === 0;
+
   return `
     <div class="painel-partilha">
       <h3>Gerir este evento ${evento.estado === 'concluido' ? '<span class="etiqueta et-tipo">Concluído</span>' : '<span class="etiqueta et-preco">Aberto</span>'}</h3>
+      <button type="button" class="btn-secundario" data-acao="ir-procurar-mais" style="width:100%;margin-bottom:14px">+ Escolher / adicionar restaurantes</button>
       <div id="listaRespostasGestao">${linhasResp}</div>
 
+      ${semRestaurantes ? '' : `
       <details class="gestao">
         <summary>+ Registar resposta recebida (por e-mail, telefone, etc.)</summary>
         <div class="chips-contactos" id="respChipsPessoas" hidden></div>
@@ -1173,11 +1218,11 @@ function blocoGestaoEventoHTML(evento){
           </select>
         </div>
         <button type="button" class="btn-primario" data-acao="registar-resposta" style="width:100%">Registar resposta</button>
-      </details>
+      </details>`}
 
       <div class="modal-acoes" style="margin-top:16px">
         <button type="button" class="btn-secundario" data-acao="gerar-pdf-evento-atual">Gerar PDF</button>
-        <button type="button" class="btn-primario" data-acao="concluir-evento-atual">${evento.estado === 'concluido' ? 'Reabrir evento' : 'Concluir evento'}</button>
+        <button type="button" class="btn-primario" data-acao="concluir-evento-atual" ${semRestaurantes?'disabled':''}>${evento.estado === 'concluido' ? 'Reabrir evento' : 'Concluir evento'}</button>
       </div>
     </div>`;
 }
@@ -1189,9 +1234,9 @@ function renderizarVotacao(){
   if(!votacaoAtual){
     contadorAba.hidden = true;
     el.innerHTML = `<div class="votacao-vazio">
-      Ainda não há nenhuma votação criada.<br>
-      Volta à aba <b>Procurar</b>, seleciona os restaurantes com a estrela ☆ e carrega em <b>Colocar a votação</b>.
-      <br><button class="btn-primario" type="button" onclick="mudarAba('procurar')">Ir para Procurar</button>
+      Ainda não há nenhum evento selecionado.<br>
+      Vai a <b>Início</b> para criar um evento novo ou abrir um já existente.
+      <br><button class="btn-primario" type="button" onclick="renderizarInicio();mudarAba('inicio')">Ir para Início</button>
     </div>`;
     return;
   }
@@ -1202,8 +1247,11 @@ function renderizarVotacao(){
   const link = linkPartilhavel(votacaoAtual);
   const temVariasDatas = votacaoAtual.datas.length > 1;
   const eventoLocal = votacaoAtual.id ? obterEvento(votacaoAtual.id) : null;
+  const semRestaurantes = votacaoAtual.restaurantes.length === 0;
 
-  const blocoRestaurantes = votacaoAtual.restaurantes.map((r,i) => `
+  const blocoRestaurantes = semRestaurantes
+    ? '<div class="vazio-pequeno">Ainda não foram propostos restaurantes para este evento.</div>'
+    : votacaoAtual.restaurantes.map((r,i) => `
     <label class="opcao-radio" data-grupo="restaurante" data-i="${i}">
       <input type="radio" name="votoRestaurante" value="${i}" ${i===0?'checked':''}>
       <span class="txt">
@@ -1245,7 +1293,7 @@ function renderizarVotacao(){
       <h2>Escolhe o restaurante</h2>
       <div class="subtitulo">${votacaoAtual.titulo ? escapar(votacaoAtual.titulo) : 'Vota no restaurante e no dia que preferes.'}</div>
 
-      <h4>Restaurante <span style="text-transform:none;font-weight:400">(toca no nome para ver detalhes)</span></h4>
+      <h4>Restaurante ${semRestaurantes ? '' : '<span style="text-transform:none;font-weight:400">(toca no nome para ver detalhes)</span>'}</h4>
       ${blocoRestaurantes}
 
       <h4>Dia${temVariasDatas ? ' — escolhe uma opção' : ''}</h4>
@@ -1263,7 +1311,7 @@ function renderizarVotacao(){
       </div>
 
       <div id="votoErro" class="voto-erro" hidden></div>
-      <button type="button" id="btnEnviarVoto" data-acao="enviar-voto">Enviar o meu voto</button>
+      <button type="button" id="btnEnviarVoto" data-acao="enviar-voto" ${semRestaurantes?'disabled':''}>Enviar o meu voto</button>
 
       <div id="votoConfirmacao"></div>
     </div>
@@ -1332,6 +1380,10 @@ function onCliqueVotacao(ev){
     setTimeout(() => alvo.textContent = 'Copiar', 1800);
   }
 
+  if(acao === 'ir-procurar-mais'){
+    mudarAba('procurar');
+  }
+
   if(acao === 'convidar'){
     const emails = $('votoEmailsConvite').value.trim();
     if(!emails) return;
@@ -1374,7 +1426,8 @@ function onCliqueVotacao(ev){
       evento.estado = 'aberto';
       evento.resultadoFinal = null;
     }else{
-      const nomeVencedor = calcularVencedor(evento) || (evento.restaurantes[0] && evento.restaurantes[0].nome);
+      if(!evento.restaurantes.length){ alert('Adiciona pelo menos um restaurante antes de concluir o evento.'); return; }
+      const nomeVencedor = calcularVencedor(evento) || evento.restaurantes[0].nome;
       const rest = evento.restaurantes.find(r => r.nome === nomeVencedor) || evento.restaurantes[0];
       const dataVencedora = calcularDataVencedora(evento);
       evento.estado = 'concluido';
@@ -1397,7 +1450,9 @@ function onCliqueVotacao(ev){
     if(!nome){ erroEl.textContent = 'Falta o teu nome.'; erroEl.hidden = false; return; }
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ erroEl.textContent = 'Indica um e-mail válido.'; erroEl.hidden = false; return; }
 
-    const iRest = +document.querySelector('input[name="votoRestaurante"]:checked').value;
+    const radioMarcado = document.querySelector('input[name="votoRestaurante"]:checked');
+    if(!radioMarcado){ erroEl.textContent = 'Ainda não há restaurantes propostos.'; erroEl.hidden = false; return; }
+    const iRest = +radioMarcado.value;
     const restauranteEscolhido = votacaoAtual.restaurantes[iRest];
 
     let dataEscolhida;
@@ -1461,7 +1516,7 @@ function renderizarPreferencias(){
   el.innerHTML = `
     <div class="painel-partilha">
       <h3>Utilizadores conhecidos (${contactos.length})</h3>
-      <div class="modal-legenda">Guardados neste dispositivo. Aparecem como sugestão rápida ao criar uma votação ou ao votar.</div>
+      <div class="modal-legenda">Guardados neste dispositivo — ficam disponíveis em todos os eventos futuros como sugestão rápida.</div>
       <div id="listaContactosPref">${contactos.length ? contactos.map(linhaContactoPrefHTML).join('') : '<div class="vazio-pequeno">Ainda não há utilizadores guardados.</div>'}</div>
       <div class="linha-participante" style="margin-top:14px">
         <input type="text" id="prefNovoNome" placeholder="Nome">
@@ -1550,7 +1605,6 @@ function descarregarFicheiro(nome, conteudo, tipo){
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
-
 function exportarJSON(){
   const dados = {
     versao: 1,
@@ -1560,7 +1614,6 @@ function exportarJSON(){
   };
   descarregarFicheiro('mesa-marcada-dados.json', JSON.stringify(dados, null, 2), 'application/json');
 }
-
 function exportarExcel(){
   if(!window.XLSX){ alert('A biblioteca de Excel ainda está a carregar — tenta novamente daqui a pouco.'); return; }
   const contactos = obterContactosGuardados();
@@ -1597,14 +1650,12 @@ function exportarExcel(){
   XLSX.utils.book_append_sheet(wb, wsRespostas, 'Respostas');
   XLSX.writeFile(wb, 'mesa-marcada-dados.xlsx');
 }
-
 function importarJSONDados(objeto){
   let n = 0;
   if(Array.isArray(objeto.contactos)) objeto.contactos.forEach(c => { if(c.nome && c.email){ guardarContacto(c.nome, c.email); n++; } });
   if(Array.isArray(objeto.eventos)) objeto.eventos.forEach(e => { if(e.id){ guardarEvento(e); n++; } });
   return n;
 }
-
 function importarDeWorkbook(wb){
   const contactos = [];
   if(wb.Sheets['Contactos']){
@@ -1641,7 +1692,6 @@ function importarDeWorkbook(wb){
   }
   return { contactos, eventos: Object.values(eventosBase) };
 }
-
 async function onImportarFicheiro(ev){
   const ficheiro = ev.target.files[0];
   if(!ficheiro) return;
@@ -1683,11 +1733,14 @@ function carregarVotacaoDoHash(){
   }
 }
 
-// ---------------- Eventos gerais ----------------
+// ---------------- Arranque ----------------
 $('btnProcurar').addEventListener('click', pesquisar);
 $('localidade').addEventListener('keydown', e => { if(e.key === 'Enter') pesquisar(); });
 
-carregarVotacaoDoHash();
+if(!carregarVotacaoDoHash()){
+  renderizarInicio();
+  mudarAba('inicio');
+}
 </script>
 </body>
 </html>
