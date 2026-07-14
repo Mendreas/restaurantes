@@ -990,10 +990,28 @@ try{
   }
 }catch(e){ console.error('Firebase indisponível, a app continua a funcionar apenas localmente:', e); }
 
+function atualizarEstadoSincronizacao(texto, ehErro){
+  const el = document.getElementById('estadoSincronizacao');
+  if(!el) return;
+  el.textContent = texto;
+  el.style.color = ehErro ? '#A83232' : 'var(--cinza)';
+  el.style.fontWeight = ehErro ? '700' : '400';
+}
+
 async function sincronizarEventoOnline(evento){
-  if(!dbFirestore) return;
-  try{ await dbFirestore.collection('eventos').doc(evento.id).set(evento); }
-  catch(e){ console.error('Não foi possível sincronizar este evento online:', e); }
+  if(!dbFirestore){
+    atualizarEstadoSincronizacao('⚠️ Sem ligação à base de dados online — este evento fica só neste dispositivo.', true);
+    return false;
+  }
+  try{
+    await dbFirestore.collection('eventos').doc(evento.id).set(evento);
+    atualizarEstadoSincronizacao('☁️ Sincronizado — visível para todos com o link.', false);
+    return true;
+  }catch(e){
+    console.error('Não foi possível sincronizar este evento online:', e);
+    atualizarEstadoSincronizacao('⚠️ Não sincronizou online: ' + (e.code || e.message || 'erro desconhecido') + ' — fica só neste dispositivo por agora.', true);
+    return false;
+  }
 }
 
 async function obterEventoOnline(id){
@@ -2019,6 +2037,7 @@ function renderizarVotacao(){
   el.innerHTML = `
     <div class="painel-partilha">
       <h3>${votacaoAtual.titulo ? escapar(votacaoAtual.titulo) : 'Votação de restaurante'}</h3>
+      ${eventoLocal ? '<div class="modal-legenda" id="estadoSincronizacao" style="margin:-6px 0 14px">A sincronizar…</div>' : ''}
       ${votacaoAtual.prazoVotacao ? `<div class="modal-legenda" style="margin:-6px 0 14px${prazoExpirado(votacaoAtual)?';color:#A83232;font-weight:700':''}">⏱️ ${prazoExpirado(votacaoAtual) ? 'Votação encerrada — o prazo era' : 'Vota até'} ${formatarPrazoPT(votacaoAtual.prazoVotacao)}</div>` : ''}
       <label>Link para partilhar</label>
       <div class="linha-link">
@@ -2117,6 +2136,7 @@ function renderizarVotacao(){
   if(eventoLocal){
     carregarFotosEvento(eventoLocal.id);
     $('inputFoto')?.addEventListener('change', onEscolherFoto);
+    sincronizarEventoOnline(eventoLocal);
   }
 
   el.querySelectorAll('input[type=radio]').forEach(inp => {
