@@ -53,7 +53,21 @@ header p{font-size:.9rem;opacity:.85}
 
 #estado{max-width:1280px;margin:14px auto 0;padding:0 24px;font-size:.9rem;color:var(--cinza)}
 #estado .erro{color:#A83232;font-weight:600}
+#estado #btnTentarNovamente{margin-left:6px;padding:5px 14px;border:none;border-radius:6px;background:var(--cobalto);color:#fff;font:inherit;font-weight:700;font-size:.8rem;cursor:pointer}
+#estado #btnTentarNovamente:hover{background:var(--cobalto-escuro)}
 #estado .aviso{background:#FFF6E4;border:1px solid #EBD9A8;border-radius:8px;padding:10px 14px;display:inline-block}
+
+.bloco-busca-nome{background:var(--branco);border-bottom:1px solid var(--linha);padding:14px 24px}
+.bloco-busca-nome .inner{max-width:1280px;margin:0 auto}
+.bloco-busca-nome label{display:block;font-size:.78rem;font-weight:700;color:var(--cinza);margin-bottom:8px}
+.linha-busca-nome{display:flex;gap:8px;flex-wrap:wrap}
+.linha-busca-nome input{flex:1;min-width:200px;padding:10px 12px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.9rem}
+.linha-busca-nome input:focus{outline:2px solid var(--cobalto);outline-offset:1px;border-color:var(--cobalto)}
+.linha-busca-nome button{background:var(--verde);color:var(--branco);border:none;padding:10px 20px;border-radius:8px;font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;white-space:nowrap}
+.linha-busca-nome button:hover{background:#215F3B}
+.linha-busca-nome button:disabled{background:var(--cinza);cursor:wait}
+#resultadosNomeExato{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+#resultadosNomeExato:empty{margin-top:0}
 
 .corpo{max-width:1280px;margin:16px auto 40px;padding:0 24px;display:grid;grid-template-columns:440px 1fr;gap:18px;align-items:start}
 #mapa{height:78vh;min-height:420px;border-radius:12px;border:1px solid var(--linha);box-shadow:var(--sombra);position:sticky;top:12px;z-index:1}
@@ -187,7 +201,7 @@ input[type=file]{font:inherit;font-size:.85rem}
 .inicio-hero{text-align:center;padding:8px 0 26px}
 .inicio-hero h2{font-family:'Fraunces',serif;font-size:1.4rem;color:var(--cobalto-escuro);margin-bottom:6px}
 .inicio-hero p{color:var(--cinza);font-size:.92rem}
-#btnNovoEvento{width:100%;padding:15px;font-size:1rem;margin-top:6px}
+#btnNovoEvento,#btnEventoPassado{width:100%;padding:15px;font-size:1rem;margin-top:10px}
 
 @media (max-width:1000px){
   .filtros .inner{grid-template-columns:1fr 1fr;gap:10px}
@@ -292,6 +306,17 @@ input[type=file]{font:inherit;font-size:.85rem}
     </div>
   </div>
 
+  <div class="bloco-busca-nome">
+    <div class="inner">
+      <label for="procurarNomeExato">Não encontraste o que procuravas nos resultados? Procura por um nome específico (ex.: "Tasca Abaladiça") — mesmo que não apareça na lista abaixo</label>
+      <div class="linha-busca-nome">
+        <input id="procurarNomeExato" type="text" placeholder="Nome do restaurante...">
+        <button id="btnProcurarNomeExato" type="button">Procurar</button>
+      </div>
+      <div id="resultadosNomeExato"></div>
+    </div>
+  </div>
+
   <div id="avisoEventoAtivo"></div>
   <div id="estado"></div>
 
@@ -366,6 +391,43 @@ input[type=file]{font:inherit;font-size:.85rem}
   </div>
 </div>
 
+<!-- ===================== MODAL: REGISTAR ENCONTRO JÁ REALIZADO ===================== -->
+<div class="modal-overlay" id="modalEventoPassado" hidden>
+  <div class="modal-caixa">
+    <h2>Registar encontro já realizado</h2>
+    <div class="modal-legenda">Não cria uma votação — fica logo guardado como concluído, com o local, a data e quem foi.</div>
+
+    <div class="campo">
+      <label for="epTitulo">Título (opcional)</label>
+      <input id="epTitulo" type="text" placeholder="ex.: Almoço de Natal GOPLIS">
+    </div>
+    <div class="campo">
+      <label for="epNomeLocal">Nome do restaurante / local</label>
+      <input id="epNomeLocal" type="text" placeholder="ex.: Tasca Abaladiça">
+    </div>
+    <div class="campo">
+      <label for="epMoradaLocal">Morada (opcional)</label>
+      <input id="epMoradaLocal" type="text" placeholder="ex.: Rua de São João, Lisboa">
+    </div>
+    <div class="linha-data" style="grid-template-columns:1fr 1fr">
+      <input id="epData" type="date">
+      <input id="epHora" type="time">
+    </div>
+
+    <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin:14px 0 8px">Quem foi</label>
+    <div class="chips-contactos" id="epParticipantesGuardados" hidden></div>
+    <div id="epParticipantes"></div>
+    <button id="epAddParticipante" type="button">+ Adicionar participante</button>
+
+    <div id="epErro" class="modal-erro" hidden></div>
+
+    <div class="modal-acoes">
+      <button class="btn-secundario" id="epCancelar" type="button">Cancelar</button>
+      <button class="btn-primario" id="epGuardar" type="button">Guardar encontro</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL: DETALHE DO RESTAURANTE ===================== -->
 <div class="modal-overlay" id="modalDetalheRestaurante" hidden>
   <div class="modal-caixa">
@@ -399,6 +461,10 @@ let listaAtual = [];
 
 // Evento/votação atualmente em edição ou em visualização
 let votacaoAtual = null;
+// Última localidade geocodificada (dá contexto à pesquisa por nome exato)
+let ultimoGeo = null;
+// Últimos resultados da pesquisa por nome exato (Nominatim)
+let ultimosResultadosNome = [];
 
 // ---------------- Utilidades ----------------
 const $ = id => document.getElementById(id);
@@ -469,6 +535,17 @@ function morada(tags){
   return partes.join(', ') || null;
 }
 
+function moradaDeNominatim(addr){
+  if(!addr) return null;
+  const partes = [];
+  const rua = [addr.road, addr.house_number].filter(Boolean).join(' ');
+  if(rua) partes.push(rua);
+  if(addr.postcode) partes.push(addr.postcode);
+  const cidade = addr.city || addr.town || addr.village || addr.municipality || addr.suburb;
+  if(cidade) partes.push(cidade);
+  return partes.join(', ') || null;
+}
+
 // ---------------- Geocodificação (Nominatim) ----------------
 async function geocodificar(texto){
   const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=pt&q=' + encodeURIComponent(texto);
@@ -498,20 +575,14 @@ async function fetchComLimite(url, opcoes, limiteMs){
   try{ return await fetch(url, { ...opcoes, signal: controlador.signal }); }
   finally{ clearTimeout(temporizador); }
 }
-async function procurarRestaurantes(lat, lon, raio, avisar){
-  const query = `[out:json][timeout:25];
-(
-  node["amenity"~"^(restaurant|fast_food)$"](around:${raio},${lat},${lon});
-  way["amenity"~"^(restaurant|fast_food)$"](around:${raio},${lat},${lon});
-);
-out center tags;`;
+async function tentarTodosEndpoints(query, avisar){
   let ultimoErro = null;
   for(let i = 0; i < ENDPOINTS_OVERPASS.length; i++){
     const ep = ENDPOINTS_OVERPASS[i];
     try{
       if(i > 0 && avisar) avisar('Servidor anterior demorou demasiado — a tentar um servidor alternativo (' + (i+1) + '/' + ENDPOINTS_OVERPASS.length + ')…');
       const r = await fetchComLimite(ep, { method:'POST', body:'data=' + encodeURIComponent(query),
-        headers:{ 'Content-Type':'application/x-www-form-urlencoded' } }, 15000);
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded' } }, 12000);
       if(!r.ok) throw new Error('HTTP ' + r.status);
       const dados = await r.json();
       return dados.elements || [];
@@ -519,7 +590,28 @@ out center tags;`;
       ultimoErro = (e.name === 'AbortError') ? new Error('tempo limite excedido') : e;
     }
   }
-  throw new Error('todos os servidores de dados estão lentos ou indisponíveis neste momento (' + (ultimoErro?.message || '') + ')');
+  throw ultimoErro || new Error('falha desconhecida');
+}
+
+async function procurarRestaurantes(lat, lon, raio, avisar){
+  const query = `[out:json][timeout:25];
+(
+  node["amenity"~"^(restaurant|fast_food)$"](around:${raio},${lat},${lon});
+  way["amenity"~"^(restaurant|fast_food)$"](around:${raio},${lat},${lon});
+);
+out center tags;`;
+
+  try{
+    return await tentarTodosEndpoints(query, avisar);
+  }catch(primeiroErro){
+    if(avisar) avisar('Todos os servidores estavam ocupados — a tentar mais uma vez…');
+    await new Promise(res => setTimeout(res, 1500));
+    try{
+      return await tentarTodosEndpoints(query, avisar);
+    }catch(segundoErro){
+      throw new Error('todos os servidores de dados estão lentos ou indisponíveis neste momento (' + (segundoErro?.message || '') + ')');
+    }
+  }
 }
 
 // ---------------- Pesquisa principal ----------------
@@ -534,6 +626,7 @@ async function pesquisar(){
   try{
     const geo = await geocodificar(local);
     if(!geo){ estado('<span class="erro">Localidade não encontrada. Experimenta ser mais específico (ex.: «Óbidos, Portugal»).</span>'); return; }
+    ultimoGeo = geo;
 
     const raio = +$('raio').value;
     estado('A procurar restaurantes num raio de ' + (raio>=1000 ? (raio/1000)+' km' : raio+' m') + ' à volta de ' + escapar(geo.nome.split(',')[0]) + '…');
@@ -583,7 +676,8 @@ async function pesquisar(){
     desenhar(filtrados, geo, raio, resultados.length);
   }catch(e){
     console.error(e);
-    estado('<span class="erro">Erro ao obter dados: ' + escapar(e.message) + '. Tenta novamente dentro de momentos.</span>');
+    estado('<span class="erro">Erro ao obter dados: ' + escapar(e.message) + '.</span> <button type="button" id="btnTentarNovamente">Tentar novamente</button>');
+    $('btnTentarNovamente')?.addEventListener('click', pesquisar);
   }finally{
     btn.disabled = false; btn.textContent = 'Procurar';
   }
@@ -970,6 +1064,107 @@ $('mvCriar').addEventListener('click', () => {
   mudarAba('procurar');
 });
 
+// ===================== MODAL: REGISTAR ENCONTRO JÁ REALIZADO =====================
+function linhaParticipantePassadoHTML(nome, email){
+  return `<div class="linha-participante" style="grid-template-columns:1fr 1fr auto auto">
+    <input type="text" class="ep-part-nome" placeholder="Nome" value="${escapar(nome||'')}">
+    <input type="email" class="ep-part-email" placeholder="e-mail (opcional)" value="${escapar(email||'')}">
+    <select class="ep-part-aval" title="Avaliação (opcional)">
+      <option value="">Aval.</option>
+      <option value="1">★</option><option value="2">★★</option><option value="3">★★★</option>
+      <option value="4">★★★★</option><option value="5">★★★★★</option>
+    </select>
+    <button type="button" class="remover-participante" aria-label="Remover">✕</button>
+  </div>`;
+}
+function adicionarLinhaParticipantePassadoSeNovo(nome, email){
+  const jaExiste = [...$('epParticipantes').querySelectorAll('.ep-part-email')]
+    .some(inp => email && inp.value.trim().toLowerCase() === email.trim().toLowerCase());
+  if(jaExiste) return;
+  $('epParticipantes').insertAdjacentHTML('beforeend', linhaParticipantePassadoHTML(nome, email));
+}
+
+function abrirModalEventoPassado(){
+  $('epTitulo').value = '';
+  $('epNomeLocal').value = '';
+  $('epMoradaLocal').value = '';
+  $('epData').value = '';
+  $('epHora').value = '';
+  $('epParticipantes').innerHTML = '';
+  renderizarChipsContactos('epParticipantesGuardados', adicionarLinhaParticipantePassadoSeNovo);
+  $('epErro').hidden = true;
+  $('modalEventoPassado').hidden = false;
+}
+function fecharModalEventoPassado(){ $('modalEventoPassado').hidden = true; }
+
+$('epParticipantes').addEventListener('click', ev => {
+  if(ev.target.classList.contains('remover-participante')) ev.target.closest('.linha-participante').remove();
+});
+$('epAddParticipante').addEventListener('click', () => {
+  $('epParticipantes').insertAdjacentHTML('beforeend', linhaParticipantePassadoHTML('', ''));
+});
+$('epCancelar').addEventListener('click', fecharModalEventoPassado);
+
+$('epGuardar').addEventListener('click', () => {
+  const titulo = $('epTitulo').value.trim();
+  const nomeLocal = $('epNomeLocal').value.trim();
+  const moradaLocal = $('epMoradaLocal').value.trim();
+  const data = $('epData').value;
+  const hora = $('epHora').value || '00:00';
+  const erroEl = $('epErro');
+
+  if(!nomeLocal){ erroEl.textContent = 'Falta o nome do restaurante ou local.'; erroEl.hidden = false; return; }
+  if(!data){ erroEl.textContent = 'Falta a data do encontro.'; erroEl.hidden = false; return; }
+  erroEl.hidden = true;
+
+  const participantes = [];
+  $('epParticipantes').querySelectorAll('.linha-participante').forEach(linha => {
+    const n = linha.querySelector('.ep-part-nome').value.trim();
+    const e = linha.querySelector('.ep-part-email').value.trim();
+    const a = linha.querySelector('.ep-part-aval').value;
+    if(n){
+      participantes.push({ nome: n, email: e, avaliacao: a ? +a : null });
+      if(e) guardarContacto(n, e);
+    }
+  });
+
+  const org = obterOrganizadorGuardado();
+  const idEvento = gerarIdEvento();
+  const restauranteManual = {
+    id: 'manual_' + idEvento, nome: nomeLocal, morada: moradaLocal || null,
+    cozinha: null, tipo: null, preco: null, telefone: null, site: null, horario: null, lat: null, lon: null
+  };
+
+  const eventoPassado = {
+    id: idEvento,
+    titulo: titulo || nomeLocal,
+    organizadorNome: org?.nome || '',
+    organizadorEmail: org?.email || '',
+    criadoEm: new Date().toISOString(),
+    restaurantes: [restauranteManual],
+    datas: [{ id: 'd0', data, hora }],
+    participantesConhecidos: participantes.map(p => ({ nome: p.nome, email: p.email })),
+    respostas: participantes.map(p => ({
+      nome: p.nome, email: p.email || '', restauranteNome: nomeLocal,
+      dataEscolhida: { data, hora }, avaliacao: p.avaliacao, registadoEm: new Date().toISOString()
+    })),
+    estado: 'concluido',
+    resultadoFinal: { restauranteNome: nomeLocal, morada: moradaLocal || null, data, hora }
+  };
+  guardarEvento(eventoPassado);
+
+  votacaoAtual = {
+    id: idEvento, titulo: eventoPassado.titulo, organizadorNome: eventoPassado.organizadorNome,
+    organizadorEmail: eventoPassado.organizadorEmail, criadoEm: eventoPassado.criadoEm,
+    restaurantes: eventoPassado.restaurantes, datas: eventoPassado.datas,
+    participantesConhecidos: eventoPassado.participantesConhecidos
+  };
+
+  fecharModalEventoPassado();
+  renderizarVotacao();
+  mudarAba('votacao');
+});
+
 // ===================== ABAS =====================
 function mudarAba(nome){
   $('aba-inicio').hidden = nome !== 'inicio';
@@ -1037,9 +1232,11 @@ function renderizarInicio(){
     </div>
 
     <button class="btn-primario" type="button" id="btnNovoEvento">+ Criar novo evento</button>
+    <button class="btn-secundario" type="button" id="btnEventoPassado">+ Registar encontro já realizado</button>
   `;
   el.onclick = onCliqueInicio;
   $('btnNovoEvento').addEventListener('click', abrirModalNovoEvento);
+  $('btnEventoPassado').addEventListener('click', abrirModalEventoPassado);
 }
 
 function onCliqueInicio(ev){
@@ -1766,6 +1963,97 @@ function filtrarPorPalavra(){
   $('semResultadosBusca').hidden = algumVisivel || !termo;
 }
 $('procurarPalavra').addEventListener('input', filtrarPorPalavra);
+
+// ===================== PESQUISA POR NOME EXATO (Nominatim) =====================
+// Encontra sítios que não aparecem na pesquisa por raio/categoria (ex.: tascas mal
+// classificadas ou fora do raio escolhido), pesquisando diretamente pelo nome.
+async function procurarPorNomeExato(){
+  const termo = $('procurarNomeExato').value.trim();
+  if(!termo) return;
+  const btn = $('btnProcurarNomeExato');
+  const elResultados = $('resultadosNomeExato');
+  btn.disabled = true; btn.textContent = 'A procurar…';
+  elResultados.innerHTML = '<div class="vazio-pequeno">A procurar «' + escapar(termo) + '»…</div>';
+
+  try{
+    const consulta = ultimoGeo ? termo + ', ' + geoNomeCurto(ultimoGeo) : termo;
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&namedetails=1&extratags=1&limit=6&accept-language=pt&q=' + encodeURIComponent(consulta);
+    const r = await fetchComLimite(url, { headers: { 'Accept':'application/json' } }, 12000);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const dados = await r.json();
+    ultimosResultadosNome = dados;
+
+    if(!dados.length){
+      elResultados.innerHTML = `<div class="vazio-pequeno">
+        Nada encontrado com esse nome no OpenStreetMap — este local pode simplesmente não estar mapeado.<br><br>
+        <b>Podes adicionar à mesma, à mão:</b>
+        <div class="linha-participante" style="grid-template-columns:1fr 1fr auto;margin-top:10px">
+          <input type="text" id="manualNome" placeholder="Nome do restaurante" value="${escapar(termo)}">
+          <input type="text" id="manualMorada" placeholder="Morada (opcional)">
+          <button type="button" class="btn-selecionar" data-acao="add-manual" style="white-space:nowrap">☆ Adicionar</button>
+        </div>
+      </div>`;
+      return;
+    }
+
+    elResultados.innerHTML = dados.map((item, i) => {
+      const nome = item.namedetails?.name || (item.display_name || '').split(',')[0];
+      const moradaTxt = moradaDeNominatim(item.address) || item.display_name;
+      const idUnico = 'nom_' + item.osm_type + '_' + item.osm_id;
+      const jaAdicionado = restauranteEstaNoEvento(idUnico);
+      return `<div class="cartao">
+        <div class="cartao-cabecalho">
+          <h3>${escapar(nome)}</h3>
+          <button type="button" class="btn-selecionar${jaAdicionado?' selecionado':''}" data-acao="add-nome-exato" data-idx="${i}">${jaAdicionado ? '★ No evento' : '☆ Adicionar'}</button>
+        </div>
+        <div class="detalhe"><span class="rotulo">Morada:</span> ${escapar(moradaTxt)}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    elResultados.innerHTML = '<div class="vazio-pequeno">Erro ao procurar: ' + escapar(e.message) + '. Tenta novamente.</div>';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Procurar';
+  }
+}
+
+$('btnProcurarNomeExato').addEventListener('click', procurarPorNomeExato);
+$('procurarNomeExato').addEventListener('keydown', e => { if(e.key === 'Enter') procurarPorNomeExato(); });
+
+$('resultadosNomeExato').addEventListener('click', ev => {
+  const btnManual = ev.target.closest('[data-acao="add-manual"]');
+  if(btnManual){
+    const nome = $('manualNome').value.trim();
+    const moradaManual = $('manualMorada').value.trim();
+    if(!nome){ alert('Escreve o nome do restaurante.'); return; }
+    const r = {
+      id: 'manual_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+      nome, morada: moradaManual || null, cozinha: null, tipo: null, preco: null,
+      telefone: null, site: null, horario: null, lat: null, lon: null
+    };
+    alternarSelecao(r, btnManual);
+    return;
+  }
+
+  const btn = ev.target.closest('[data-acao="add-nome-exato"]');
+  if(!btn) return;
+  const item = ultimosResultadosNome[+btn.dataset.idx];
+  if(!item) return;
+  const nome = item.namedetails?.name || (item.display_name || '').split(',')[0];
+  const ex = item.extratags || {};
+  const r = {
+    id: 'nom_' + item.osm_type + '_' + item.osm_id,
+    nome,
+    lat: +item.lat, lon: +item.lon,
+    morada: moradaDeNominatim(item.address) || item.display_name,
+    cozinha: cozinhaLegivel(ex.cuisine),
+    tipo: classificarTipo({ name: nome, amenity: item.type, cuisine: ex.cuisine }),
+    preco: nivelPreco(ex),
+    telefone: ex.phone || ex['contact:phone'] || null,
+    site: ex.website || ex['contact:website'] || null,
+    horario: ex.opening_hours || null
+  };
+  alternarSelecao(r, btn);
+});
 
 // ---------------- Arranque ----------------
 $('btnProcurar').addEventListener('click', pesquisar);
