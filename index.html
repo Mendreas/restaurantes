@@ -2434,8 +2434,17 @@ function renderizarPreferencias(){
   const el = $('preferenciasConteudo');
   const contactos = obterContactosGuardados();
   const eventos = obterEventos();
+  const org = obterOrganizadorGuardado();
 
   el.innerHTML = `
+    <div class="painel-partilha">
+      <h3>O teu perfil de organizador</h3>
+      <div class="modal-legenda">Se já criaste eventos noutro dispositivo (ex.: no computador), indica aqui o mesmo e-mail para os veres também aqui.</div>
+      <div class="campo"><label for="prefOrgNome">O teu nome</label><input id="prefOrgNome" type="text" value="${escapar(org?.nome||'')}"></div>
+      <div class="campo"><label for="prefOrgEmail">O teu e-mail</label><input id="prefOrgEmail" type="email" value="${escapar(org?.email||'')}"></div>
+      <button type="button" class="btn-primario" data-acao="sincronizar-meus-eventos" style="width:100%">Sincronizar os meus eventos deste e-mail</button>
+    </div>
+
     <div class="painel-partilha">
       <h3>Utilizadores conhecidos (${contactos.length})</h3>
       <div class="modal-legenda">Guardados neste dispositivo — ficam disponíveis em todos os eventos futuros como sugestão rápida.</div>
@@ -2473,6 +2482,44 @@ async function onCliquePreferencias(ev){
   const alvo = ev.target.closest('[data-acao]');
   if(!alvo) return;
   const acao = alvo.dataset.acao;
+
+  if(acao === 'sincronizar-meus-eventos'){
+    const nome = $('prefOrgNome').value.trim();
+    const email = $('prefOrgEmail').value.trim();
+    if(!nome || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      alert('Indica o teu nome e um e-mail válido.');
+      return;
+    }
+    guardarOrganizador(nome, email);
+    if(!dbFirestore){
+      alert('Sem ligação à base de dados online neste momento — tenta novamente daqui a pouco.');
+      return;
+    }
+    alvo.disabled = true;
+    const textoOriginal = alvo.textContent;
+    alvo.textContent = 'A sincronizar…';
+    try{
+      const snap = await dbFirestore.collection('eventos').where('organizadorEmail', '==', email).get();
+      let n = 0;
+      snap.forEach(doc => {
+        const dados = doc.data();
+        const lista = obterEventos();
+        const i = lista.findIndex(e => e.id === dados.id);
+        if(i >= 0) lista[i] = dados; else lista.unshift(dados);
+        guardarEventos(lista);
+        marcarComoMeuEvento(dados.id);
+        n++;
+      });
+      alert(n > 0 ? n + ' evento(s) sincronizados para este dispositivo.' : 'Não encontrei eventos online com este e-mail.');
+      renderizarPreferencias();
+    }catch(e){
+      alert('Não foi possível sincronizar: ' + (e.code || e.message || 'erro desconhecido'));
+    }finally{
+      alvo.disabled = false;
+      alvo.textContent = textoOriginal;
+    }
+    return;
+  }
 
   if(acao === 'pref-add-contacto'){
     const nome = $('prefNovoNome').value.trim();
