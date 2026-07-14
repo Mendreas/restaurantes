@@ -143,6 +143,7 @@ body.tem-barra{padding-bottom:74px}
 .chips-contactos[hidden]{display:none}
 .chip-contacto{background:var(--fundo);border:1.5px solid var(--linha);color:var(--tinta);font:inherit;font-size:.82rem;font-weight:600;padding:7px 13px;border-radius:20px;cursor:pointer}
 .chip-contacto:hover{border-color:var(--cobalto);color:var(--cobalto)}
+.chip-contacto.selecionado{background:var(--cobalto);border-color:var(--cobalto);color:var(--branco)}
 
 .votacao-wrap{max-width:720px;margin:0 auto;padding:24px}
 .votacao-vazio{background:var(--branco);border:1px dashed var(--linha);border-radius:12px;padding:48px 24px;text-align:center;color:var(--cinza)}
@@ -1629,6 +1630,9 @@ function renderizarVotacao(){
         </label>`).join('')
     : `<div class="info-data-unica"><strong>${formatarDataPT(votacaoAtual.datas[0].data)}</strong> às ${escapar(votacaoAtual.datas[0].hora)}</div>`;
 
+  const conhecidos = mesclarContactos(votacaoAtual.participantesConhecidos || [], obterContactosGuardados());
+  const opcoesConhecidos = conhecidos.map((c,i) => `<option value="${i}">${escapar(c.nome)}</option>`).join('');
+
   el.innerHTML = `
     <div class="painel-partilha">
       <h3>${votacaoAtual.titulo ? escapar(votacaoAtual.titulo) : 'Votação de restaurante'}</h3>
@@ -1638,8 +1642,10 @@ function renderizarVotacao(){
         <button type="button" data-acao="copiar-link">Copiar</button>
       </div>
       <label>Convidar participantes por e-mail</label>
+      <div class="modal-legenda" style="margin:-4px 0 10px">Toca nos nomes para escolher quem convidar</div>
+      <div class="chips-contactos" id="convidarChipsPessoas" hidden></div>
       <div class="linha-convite">
-        <input type="text" id="votoEmailsConvite" placeholder="ana@empresa.pt, joao@empresa.pt">
+        <input type="text" id="votoEmailsConvite" placeholder="ou escreve outros e-mails, separados por vírgula">
         <button type="button" data-acao="convidar">Enviar convite</button>
       </div>
     </div>
@@ -1650,22 +1656,30 @@ function renderizarVotacao(){
       <h2>Escolhe o restaurante</h2>
       <div class="subtitulo">${votacaoAtual.titulo ? escapar(votacaoAtual.titulo) : 'Vota no restaurante e no dia que preferes.'}</div>
 
+      <h4>Quem és tu?</h4>
+      <div class="campo">
+        <select id="votoSelecionarPessoa">
+          <option value="">— Escolhe o teu nome —</option>
+          ${opcoesConhecidos}
+          <option value="__outro__">Outro (o meu nome não está aqui)</option>
+        </select>
+      </div>
+      <div id="votoCamposManuais" hidden>
+        <div class="campo">
+          <label for="votoNome">O teu nome</label>
+          <input type="text" id="votoNome" placeholder="Nome completo">
+        </div>
+        <div class="campo">
+          <label for="votoEmail">O teu e-mail</label>
+          <input type="email" id="votoEmail" placeholder="tu@empresa.pt">
+        </div>
+      </div>
+
       <h4>Restaurante ${semRestaurantes ? '' : '<span style="text-transform:none;font-weight:400">(toca no nome para ver detalhes)</span>'}</h4>
       ${blocoRestaurantes}
 
       <h4>Dia${temVariasDatas ? ' — escolhe uma opção' : ''}</h4>
       ${blocoDatas}
-
-      <h4>Os teus dados</h4>
-      <div class="chips-contactos" id="votoChipsPessoas" hidden></div>
-      <div class="campo">
-        <label for="votoNome">O teu nome</label>
-        <input type="text" id="votoNome" placeholder="Nome completo">
-      </div>
-      <div class="campo">
-        <label for="votoEmail">O teu e-mail</label>
-        <input type="email" id="votoEmail" placeholder="tu@empresa.pt">
-      </div>
 
       <div id="votoErro" class="voto-erro" hidden></div>
       <button type="button" id="btnEnviarVoto" data-acao="enviar-voto" ${semRestaurantes?'disabled':''}>Enviar o meu voto</button>
@@ -1674,11 +1688,29 @@ function renderizarVotacao(){
     </div>
   `;
 
-  const conhecidos = mesclarContactos(votacaoAtual.participantesConhecidos || [], obterContactosGuardados());
-  const elChips = $('votoChipsPessoas');
+  // Escolher pessoa por dropdown: preenche nome/e-mail (ocultos) ou mostra campos manuais
+  $('votoSelecionarPessoa').addEventListener('change', ev => {
+    const valor = ev.target.value;
+    const camposManuais = $('votoCamposManuais');
+    if(valor === '__outro__'){
+      camposManuais.hidden = false;
+      $('votoNome').value = '';
+      $('votoEmail').value = '';
+    }else if(valor === ''){
+      camposManuais.hidden = true;
+      $('votoNome').value = '';
+      $('votoEmail').value = '';
+    }else{
+      camposManuais.hidden = true;
+      const pessoa = conhecidos[+valor];
+      if(pessoa){ $('votoNome').value = pessoa.nome; $('votoEmail').value = pessoa.email; }
+    }
+  });
+
+  const elConvite = $('convidarChipsPessoas');
   if(conhecidos.length){
-    elChips.hidden = false;
-    elChips.innerHTML = conhecidos.map(c =>
+    elConvite.hidden = false;
+    elConvite.innerHTML = conhecidos.map(c =>
       `<button type="button" class="chip-contacto" data-nome="${escapar(c.nome)}" data-email="${escapar(c.email)}">${escapar(c.nome)}</button>`
     ).join('');
   }
@@ -1748,10 +1780,9 @@ function onCliqueVotacao(ev){
     if(votacaoAtual.restaurantes[i]) abrirDetalheRestaurante(votacaoAtual.restaurantes[i]);
   }
 
-  const chipVoto = ev.target.closest('#votoChipsPessoas .chip-contacto');
-  if(chipVoto){
-    $('votoNome').value = chipVoto.dataset.nome;
-    $('votoEmail').value = chipVoto.dataset.email;
+  const chipConvite = ev.target.closest('#convidarChipsPessoas .chip-contacto');
+  if(chipConvite){
+    chipConvite.classList.toggle('selecionado');
     return;
   }
   const chipResp = ev.target.closest('#respChipsPessoas .chip-contacto');
@@ -1776,12 +1807,14 @@ function onCliqueVotacao(ev){
   }
 
   if(acao === 'convidar'){
-    const emails = $('votoEmailsConvite').value.trim();
-    if(!emails) return;
+    const selecionados = [...document.querySelectorAll('#convidarChipsPessoas .chip-contacto.selecionado')].map(c => c.dataset.email);
+    const escritos = $('votoEmailsConvite').value.trim();
+    const todosEmails = [...selecionados, ...(escritos ? escritos.split(',').map(s => s.trim()).filter(Boolean) : [])];
+    if(!todosEmails.length){ alert('Escolhe pelo menos um participante ou escreve um e-mail.'); return; }
     const link = linkPartilhavel(votacaoAtual);
     window.location.href = construirMailto({
       cc: votacaoAtual.organizadorEmail,
-      bcc: emails,
+      bcc: todosEmails.join(','),
       assunto: 'Escolhe o restaurante — ' + (votacaoAtual.titulo || 'reunião'),
       corpo: textoConviteCorpo(votacaoAtual, link)
     });
