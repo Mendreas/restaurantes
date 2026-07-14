@@ -1110,19 +1110,27 @@ function abrirDBFotos(){
   return dbFotosPromise;
 }
 
-function comprimirImagem(ficheiro, maxLado = 1280, qualidade = 0.75){
+function comprimirImagem(ficheiro, maxLado = 1100, qualidade = 0.72){
   return new Promise((resolve, reject) => {
     const leitor = new FileReader();
     leitor.onload = () => {
       const img = new Image();
       img.onload = () => {
-        let { width, height } = img;
-        if(width > height && width > maxLado){ height = Math.round(height * maxLado / width); width = maxLado; }
-        else if(height >= width && height > maxLado){ width = Math.round(width * maxLado / height); height = maxLado; }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve({ dataUrl: canvas.toDataURL('image/jpeg', qualidade), largura: width, altura: height });
+        function gerar(lado, qual){
+          let { width, height } = img;
+          if(width > height && width > lado){ height = Math.round(height * lado / width); width = lado; }
+          else if(height >= width && height > lado){ width = Math.round(width * lado / height); height = lado; }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          return { dataUrl: canvas.toDataURL('image/jpeg', qual), largura: width, altura: height };
+        }
+        let resultado = gerar(maxLado, qualidade);
+        // Segurança extra: se ainda assim ficar grande (fotos muito grandes), comprime mais uma vez
+        if(resultado.dataUrl.length > 900000){
+          resultado = gerar(800, 0.55);
+        }
+        resolve(resultado);
       };
       img.onerror = () => reject(new Error('imagem inválida'));
       img.src = leitor.result;
@@ -1135,10 +1143,11 @@ function comprimirImagem(ficheiro, maxLado = 1280, qualidade = 0.75){
 async function guardarFoto(eventoId, info){
   const db = await abrirDBFotos();
   const id = eventoId + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  const registo = { id, eventoId, dataUrl: info.dataUrl, largura: info.largura, altura: info.altura, criadoEm: new Date().toISOString() };
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DB_FOTOS_STORE, 'readwrite');
-    tx.objectStore(DB_FOTOS_STORE).put({ id, eventoId, dataUrl: info.dataUrl, largura: info.largura, altura: info.altura, criadoEm: new Date().toISOString() });
-    tx.oncomplete = () => resolve(id);
+    tx.objectStore(DB_FOTOS_STORE).put(registo);
+    tx.oncomplete = () => { sincronizarFotoOnline(registo); resolve(id); };
     tx.onerror = () => reject(tx.error);
   });
 }
@@ -1157,7 +1166,7 @@ async function removerFoto(id){
   return new Promise((resolve, reject) => {
     const tx = db.transaction(DB_FOTOS_STORE, 'readwrite');
     tx.objectStore(DB_FOTOS_STORE).delete(id);
-    tx.oncomplete = () => resolve();
+    tx.oncomplete = () => { removerFotoOnline(id); resolve(); };
     tx.onerror = () => reject(tx.error);
   });
 }
@@ -1167,6 +1176,47 @@ async function removerFotosDoEvento(eventoId){
     const fotos = await obterFotosDoEvento(eventoId);
     for(const f of fotos) await removerFoto(f.id);
   }catch(e){ /* ignora — IndexedDB pode estar indisponível */ }
+}
+
+// As fotos são guardadas como documentos no Firestore (não no Firebase Storage,
+// que agora exige plano pago) — cada uma já vem comprimida para caber no limite
+// de 1MB por documento. Assim ficam visíveis para todos com o link, não só para
+// quem tirou a foto.
+async function sincronizarFotoOnline(foto){
+  if(!dbFirestore) return;
+  if(foto.dataUrl && foto.dataUrl.length > 950000){
+    console.error('Foto grande demais para sincronizar online — fica só neste dispositivo.');
+    return;
+  }
+  try{ await dbFirestore.collection('fotos').doc(foto.id).set(foto); }
+  catch(e){ console.error('Não foi possível sincronizar esta foto online:', e); }
+}
+
+async function removerFotoOnline(id){
+  if(!dbFirestore) return;
+  try{ await dbFirestore.collection('fotos').doc(id).delete(); }
+  catch(e){ console.error('Não foi possível remover esta foto online:', e); }
+}
+
+async function obterFotosOnline(eventoId){
+  if(!dbFirestore) return [];
+  try{
+    const snap = await dbFirestore.collection('fotos').where('eventoId', '==', eventoId).get();
+    const fotos = [];
+    snap.forEach(doc => fotos.push(doc.data()));
+    return fotos;
+  }catch(e){ console.error('Não foi possível obter fotos online:', e); return []; }
+}
+
+// Junta as fotos guardadas neste dispositivo com as que estão online, sem duplicar.
+async function obterFotosCombinadas(eventoId){
+  const [locais, online] = await Promise.all([
+    obterFotosDoEvento(eventoId).catch(() => []),
+    obterFotosOnline(eventoId)
+  ]);
+  const mapa = new Map();
+  [...locais, ...online].forEach(f => mapa.set(f.id, f));
+  return [...mapa.values()].sort((a,b) => (a.criadoEm||'').localeCompare(b.criadoEm||''));
 }
 
 // Guarda o conjunto de fotos atualmente visível, para o visualizador em ecrã inteiro navegar entre elas
@@ -1184,7 +1234,7 @@ async function carregarFotosEvento(eventoId){
   const el = $('grelhaFotos');
   if(!el) return;
   try{
-    const fotos = await obterFotosDoEvento(eventoId);
+    const fotos = await obterFotosCombinadas(eventoId);
     fotosAtuaisLightbox = fotos;
     el.innerHTML = fotos.length ? fotos.map(f => fotoItemHTML(f, true)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
   }catch(e){
@@ -1196,7 +1246,19 @@ async function carregarFotosModal(eventoId){
   const el = $('medFotos');
   if(!el) return;
   try{
-    const fotos = await obterFotosDoEvento(eventoId);
+    const fotos = await obterFotosCombinadas(eventoId);
+    fotosAtuaisLightbox = fotos;
+    el.innerHTML = fotos.length ? fotos.map(f => fotoItemHTML(f, false)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
+  }catch(e){
+    el.innerHTML = '<div class="vazio-pequeno">As fotografias não estão disponíveis neste navegador.</div>';
+  }
+}
+
+async function carregarFotosPublico(eventoId){
+  const el = $('grelhaFotosPublica');
+  if(!el) return;
+  try{
+    const fotos = await obterFotosCombinadas(eventoId);
     fotosAtuaisLightbox = fotos;
     el.innerHTML = fotos.length ? fotos.map(f => fotoItemHTML(f, false)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
   }catch(e){
@@ -1649,22 +1711,25 @@ async function onCliqueEventos(ev){
   else{ alert('Este evento já não existe (foi apagado).'); renderizarEventos(); }
 }
 
-async function abrirModalDetalheEvento(evento){
-  $('medNome').textContent = evento.titulo || 'Evento';
-  const respostas = evento.respostas || [];
-
-  let localHTML;
+function blocoLocalHTML(evento){
   if(evento.resultadoFinal){
-    localHTML = `<div class="info-data-unica">
+    return `<div class="info-data-unica">
       <strong>${escapar(evento.resultadoFinal.restauranteNome)}</strong>
       ${evento.resultadoFinal.morada ? '<br>' + escapar(evento.resultadoFinal.morada) : ''}
       <br>${formatarDataPT(evento.resultadoFinal.data)} às ${escapar(evento.resultadoFinal.hora)}
     </div>`;
-  }else if((evento.restaurantes||[]).length){
-    localHTML = '<div class="vazio-pequeno">Ainda por decidir. Opções propostas: ' + evento.restaurantes.map(r => escapar(r.nome)).join(', ') + '</div>';
-  }else{
-    localHTML = '<div class="vazio-pequeno">Ainda sem restaurantes propostos.</div>';
   }
+  if((evento.restaurantes||[]).length){
+    return '<div class="vazio-pequeno">Ainda por decidir. Opções propostas: ' + evento.restaurantes.map(r => escapar(r.nome)).join(', ') + '</div>';
+  }
+  return '<div class="vazio-pequeno">Ainda sem restaurantes propostos.</div>';
+}
+
+async function abrirModalDetalheEvento(evento){
+  $('medNome').textContent = evento.titulo || 'Evento';
+  const respostas = evento.respostas || [];
+
+  const localHTML = blocoLocalHTML(evento);
 
   const respostasHTML = respostas.length
     ? respostas.map(r => `<div class="linha-resposta">
@@ -1819,7 +1884,7 @@ async function gerarPdfEvento(evento){
   doc.text('Gerado por Mesa Marcada em ' + new Date().toLocaleString('pt-PT'), 14, 290);
 
   let fotos = [];
-  try{ fotos = await obterFotosDoEvento(evento.id); }catch(e){ fotos = []; }
+  try{ fotos = await obterFotosCombinadas(evento.id); }catch(e){ fotos = []; }
 
   if(fotos.length){
     const pagLargura = 210, margemLat = 14;
@@ -1968,10 +2033,14 @@ function blocoResultadosPublicoHTML(evento){
   return `
     <div class="painel-partilha">
       <h3>Como está a correr a votação ${evento.estado === 'concluido' ? '<span class="etiqueta et-tipo">Concluído</span>' : '<span class="etiqueta et-preco">Aberto</span>'}</h3>
+      <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Local</label>
+      <div style="margin-bottom:16px">${blocoLocalHTML(evento)}</div>
       <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Resultados até agora</label>
       <div style="margin-bottom:16px">${blocoResultadosHTML(evento)}</div>
       <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Quem já respondeu (${respostas.length})</label>
-      <div>${linhasResp}</div>
+      <div style="margin-bottom:16px">${linhasResp}</div>
+      <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Fotografias</label>
+      <div class="grelha-fotos" id="grelhaFotosPublica"><div class="vazio-pequeno">A carregar…</div></div>
     </div>`;
 }
 
@@ -2190,6 +2259,8 @@ function renderizarVotacao(){
     carregarFotosEvento(eventoLocal.id);
     $('inputFoto')?.addEventListener('change', onEscolherFoto);
     sincronizarEventoOnline(eventoLocal);
+  }else if(eventoCompleto){
+    carregarFotosPublico(eventoCompleto.id);
   }
 
   el.querySelectorAll('input[type=radio]').forEach(inp => {
