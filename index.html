@@ -1691,6 +1691,7 @@ function renderizarEventos(){
       <h2>Eventos</h2>
       <p>Toca num evento para ver o local, participantes, avaliações e fotografias.</p>
     </div>
+    <button type="button" class="btn-secundario" data-acao="sincronizar-todos-eventos" style="width:100%;margin-bottom:16px">🔄 Ver eventos de toda a equipa</button>
     <div class="painel-partilha">
       <h3>A decorrer (${abertos.length})</h3>
       ${abertos.length ? abertos.map(cartaoEventoListaHTML).join('') : '<div class="vazio-pequeno">Nenhum evento em aberto.</div>'}
@@ -1703,7 +1704,41 @@ function renderizarEventos(){
   el.onclick = onCliqueEventos;
 }
 
+// Traz todos os eventos da base de dados online para este dispositivo, sem
+// marcar nenhum como "meu" — útil para um convidado ver tudo sem ter os links
+// individuais, mas sem ganhar poder de gestão sobre eventos que não criou.
+async function sincronizarTodosOsEventos(){
+  if(!dbFirestore) throw new Error('sem ligação à base de dados online');
+  const snap = await dbFirestore.collection('eventos').get();
+  let n = 0;
+  snap.forEach(doc => {
+    const dados = doc.data();
+    const lista = obterEventos();
+    const i = lista.findIndex(e => e.id === dados.id);
+    if(i >= 0) lista[i] = dados; else lista.unshift(dados);
+    guardarEventos(lista);
+    n++;
+  });
+  return n;
+}
+
 async function onCliqueEventos(ev){
+  const btnSync = ev.target.closest('[data-acao="sincronizar-todos-eventos"]');
+  if(btnSync){
+    btnSync.disabled = true;
+    const textoOriginal = btnSync.textContent;
+    btnSync.textContent = 'A atualizar…';
+    try{
+      await sincronizarTodosOsEventos();
+      renderizarEventos();
+    }catch(e){
+      alert('Não foi possível atualizar: ' + (e.code || e.message || 'erro desconhecido'));
+      btnSync.disabled = false;
+      btnSync.textContent = textoOriginal;
+    }
+    return;
+  }
+
   const alvo = ev.target.closest('[data-acao="ver-evento-modal"]');
   if(!alvo) return;
   const evt = await carregarEventoMaisRecente(alvo.dataset.id);
