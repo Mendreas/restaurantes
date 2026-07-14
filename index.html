@@ -184,6 +184,11 @@ body.tem-barra{padding-bottom:74px}
 
 .linha-resposta{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--linha);font-size:.86rem}
 .linha-resposta:last-child{border-bottom:none}
+.linha-resultado{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:.86rem}
+.linha-resultado .nome-resultado{flex:0 0 38%;font-weight:600;color:var(--tinta);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.linha-resultado .barra-resultado{flex:1;height:10px;background:var(--fundo);border-radius:6px;overflow:hidden}
+.linha-resultado .barra-resultado-preenchida{height:100%;background:var(--mostarda);border-radius:6px;transition:width .3s}
+.linha-resultado .contagem-resultado{flex:0 0 auto;color:var(--cinza);font-size:.78rem;white-space:nowrap}
 .grelha-fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-bottom:10px}
 .foto-item{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;border:1px solid var(--linha);background:var(--fundo)}
 .foto-item img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer}
@@ -397,6 +402,11 @@ input[type=file]{font:inherit;font-size:.85rem}
     <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Data(s) e hora(s) do evento</label>
     <div id="mvDatas"></div>
     <button id="mvAddData" type="button">+ Adicionar outra data/hora</button>
+
+    <div class="campo">
+      <label for="mvPrazo">Prazo para votar (opcional)</label>
+      <input id="mvPrazo" type="datetime-local">
+    </div>
 
     <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Participantes (opcional)</label>
     <div class="modal-legenda">Adiciona colegas mesmo que ainda não tenham votado — eles vão ver o nome deles pronto a escolher.</div>
@@ -1130,6 +1140,20 @@ function formatarDataPT(dataISO){
   const [ano,mes,dia] = dataISO.split('-');
   return dia + '/' + mes + '/' + ano;
 }
+function formatarPrazoPT(prazoVotacao){
+  if(!prazoVotacao) return null;
+  const d = new Date(prazoVotacao);
+  if(isNaN(d)) return null;
+  const dia = String(d.getDate()).padStart(2,'0');
+  const mes = String(d.getMonth()+1).padStart(2,'0');
+  const hora = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  return dia + '/' + mes + '/' + d.getFullYear() + ' às ' + hora;
+}
+function prazoExpirado(votacao){
+  if(!votacao || !votacao.prazoVotacao) return false;
+  const d = new Date(votacao.prazoVotacao);
+  return !isNaN(d) && d < new Date();
+}
 function gerarIdEvento(){
   return 'ev_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 }
@@ -1175,6 +1199,7 @@ function abrirModalNovoEvento(){
   $('mvNomeOrganizador').value = org?.nome || '';
   $('mvEmailOrganizador').value = org?.email || '';
   $('mvDatas').innerHTML = linhaDataHTML('', '');
+  $('mvPrazo').value = '';
   $('mvParticipantes').innerHTML = '';
   renderizarChipsContactos('mvParticipantesGuardados', adicionarLinhaParticipanteSeNovo);
   $('mvErro').hidden = true;
@@ -1236,6 +1261,8 @@ $('mvCriar').addEventListener('click', () => {
   guardarOrganizador(nomeOrganizador, email);
   guardarContacto(nomeOrganizador, email);
 
+  const prazoVotacao = $('mvPrazo').value || null;
+
   const idEvento = gerarIdEvento();
   votacaoAtual = {
     id: idEvento,
@@ -1245,12 +1272,13 @@ $('mvCriar').addEventListener('click', () => {
     criadoEm: new Date().toISOString(),
     restaurantes: [],
     datas,
+    prazoVotacao,
     participantesConhecidos: participantes
   };
 
   guardarEvento({
     id: idEvento, titulo, organizadorNome: nomeOrganizador, organizadorEmail: email,
-    criadoEm: votacaoAtual.criadoEm, restaurantes: [], datas,
+    criadoEm: votacaoAtual.criadoEm, restaurantes: [], datas, prazoVotacao,
     participantesConhecidos: participantes, respostas: [], estado: 'aberto', resultadoFinal: null
   });
 
@@ -1444,7 +1472,7 @@ function onCliqueInicio(ev){
   if(evt){
     votacaoAtual = {
       id: evt.id, titulo: evt.titulo, organizadorNome: evt.organizadorNome, organizadorEmail: evt.organizadorEmail,
-      criadoEm: evt.criadoEm, restaurantes: evt.restaurantes, datas: evt.datas, participantesConhecidos: evt.participantesConhecidos
+      criadoEm: evt.criadoEm, restaurantes: evt.restaurantes, datas: evt.datas, prazoVotacao: evt.prazoVotacao, participantesConhecidos: evt.participantesConhecidos
     };
     renderizarVotacao();
     mudarAba('votacao');
@@ -1458,11 +1486,12 @@ function cartaoEventoListaHTML(e){
     ? formatarDataPT(e.resultadoFinal.data)
     : (e.datas && e.datas[0] ? formatarDataPT(e.datas[0].data) + (e.datas.length>1 ? ' (+'+(e.datas.length-1)+')' : '') : '-');
   const local = e.resultadoFinal ? e.resultadoFinal.restauranteNome : ((e.restaurantes||[]).length ? (e.restaurantes.length + ' propostas') : 'sem local ainda');
+  const avisoPrazo = e.estado !== 'concluido' && prazoExpirado(e) ? ' · <span style="color:#A83232;font-weight:600">prazo terminado</span>' : '';
   return `<div class="cartao-evento" data-acao="ver-evento-modal" data-id="${e.id}">
     <div class="titulo-evento">${escapar(e.titulo || 'Sem título')}
       <span class="etiqueta ${e.estado==='concluido'?'et-tipo':'et-preco'}">${e.estado==='concluido'?'Concluído':'Aberto'}</span>
     </div>
-    <div class="meta-evento">${escapar(local)} · ${dataResumo} · ${nResp} resposta${nResp!==1?'s':''}</div>
+    <div class="meta-evento">${escapar(local)} · ${dataResumo} · ${nResp} resposta${nResp!==1?'s':''}${avisoPrazo}</div>
   </div>`;
 }
 
@@ -1522,9 +1551,12 @@ async function abrirModalDetalheEvento(evento){
 
   $('medConteudo').innerHTML = `
     <span class="etiqueta ${evento.estado==='concluido'?'et-tipo':'et-preco'}" style="margin-bottom:14px;display:inline-block">${evento.estado==='concluido'?'Concluído':'Aberto'}</span>
+    ${evento.prazoVotacao ? `<div class="modal-legenda" style="margin:-8px 0 12px${prazoExpirado(evento)?';color:#A83232;font-weight:700':''}">⏱️ ${prazoExpirado(evento) ? 'Prazo para votar terminou a' : 'Prazo para votar:'} ${formatarPrazoPT(evento.prazoVotacao)}</div>` : ''}
     <h4 style="margin-top:4px">Local</h4>
     ${localHTML}
-    <h4>Participantes (${respostas.length})</h4>
+    <h4>Resultados</h4>
+    ${blocoResultadosHTML(evento)}
+    <h4>Todas as respostas (${respostas.length})</h4>
     ${respostasHTML}
     <h4>Fotografias</h4>
     <div class="grelha-fotos" id="medFotos"><div class="vazio-pequeno">A carregar…</div></div>
@@ -1549,7 +1581,7 @@ $('modalDetalheEvento').addEventListener('click', ev => {
     if(evt){
       votacaoAtual = {
         id: evt.id, titulo: evt.titulo, organizadorNome: evt.organizadorNome, organizadorEmail: evt.organizadorEmail,
-        criadoEm: evt.criadoEm, restaurantes: evt.restaurantes, datas: evt.datas, participantesConhecidos: evt.participantesConhecidos
+        criadoEm: evt.criadoEm, restaurantes: evt.restaurantes, datas: evt.datas, prazoVotacao: evt.prazoVotacao, participantesConhecidos: evt.participantesConhecidos
       };
       $('modalDetalheEvento').hidden = true;
       renderizarVotacao();
@@ -1718,6 +1750,7 @@ function construirMailto({ to='', cc='', bcc='', assunto='', corpo='' }){
 function textoConviteCorpo(votacao, link){
   const listaRest = votacao.restaurantes.map(r => '- ' + r.nome + (r.morada ? ' (' + r.morada + ')' : '')).join('\n') || '(ainda sem restaurantes propostos)';
   const listaDatas = votacao.datas.map(d => '- ' + formatarDataPT(d.data) + ' às ' + d.hora).join('\n');
+  const prazoTexto = votacao.prazoVotacao ? `\nResponde até: ${formatarPrazoPT(votacao.prazoVotacao)}\n` : '';
   return `Olá!
 
 ${votacao.organizadorNome || 'Um colega'} convidou-te a escolher o restaurante para: ${votacao.titulo || 'a nossa reunião'}
@@ -1727,7 +1760,7 @@ ${listaRest}
 
 Data(s)/hora(s) proposta(s):
 ${listaDatas}
-
+${prazoTexto}
 Escolhe o teu preferido e confirma aqui:
 ${link}
 
@@ -1759,6 +1792,44 @@ function analisarEmailVoto(texto, evento){
   return { nome, email, iRest, iData };
 }
 
+function calcularContagem(evento){
+  const contRest = {}, contData = {};
+  (evento.respostas || []).forEach(r => {
+    if(r.restauranteNome) contRest[r.restauranteNome] = (contRest[r.restauranteNome] || 0) + 1;
+    if(r.dataEscolhida){ const k = r.dataEscolhida.data + '|' + r.dataEscolhida.hora; contData[k] = (contData[k] || 0) + 1; }
+  });
+  return { contRest, contData };
+}
+
+function linhaResultadoHTML(nome, n, max, destaque){
+  const largura = max > 0 ? Math.round(n / max * 100) : 0;
+  return `<div class="linha-resultado">
+    <span class="nome-resultado">${destaque ? '🏆 ' : ''}${escapar(nome)}</span>
+    <div class="barra-resultado"><div class="barra-resultado-preenchida" style="width:${largura}%"></div></div>
+    <span class="contagem-resultado">${n} voto${n!==1?'s':''}</span>
+  </div>`;
+}
+
+function blocoResultadosHTML(evento){
+  const respostas = evento.respostas || [];
+  if(!respostas.length) return '<div class="vazio-pequeno">Ainda sem votos registados para mostrar resultados.</div>';
+
+  const { contRest, contData } = calcularContagem(evento);
+  const restaurantesOrdenados = Object.entries(contRest).sort((a,b) => b[1]-a[1]);
+  const maxRest = restaurantesOrdenados[0]?.[1] || 1;
+  const linhasRest = restaurantesOrdenados.map(([nome,n],i) => linhaResultadoHTML(nome, n, maxRest, i===0)).join('');
+
+  let blocoData = '';
+  if(evento.datas.length > 1){
+    const datasComContagem = evento.datas.map(d => ({ d, n: contData[d.data+'|'+d.hora] || 0 })).sort((a,b) => b.n - a.n);
+    const maxData = Math.max(...datasComContagem.map(x=>x.n), 1);
+    const linhasData = datasComContagem.map((x,i) => linhaResultadoHTML(formatarDataPT(x.d.data) + ' às ' + x.d.hora, x.n, maxData, i===0 && x.n>0)).join('');
+    blocoData = '<h4 style="margin-top:16px">Dia mais votado</h4>' + linhasData;
+  }
+
+  return `<h4 style="margin-top:0">Restaurante mais votado</h4>${linhasRest}${blocoData}`;
+}
+
 function blocoGestaoEventoHTML(evento){
   const respostas = evento.respostas || [];
   const opcoesRestaurante = evento.restaurantes.map((r,i) => `<option value="${i}">${escapar(r.nome)}</option>`).join('');
@@ -1774,14 +1845,19 @@ function blocoGestaoEventoHTML(evento){
   return `
     <div class="painel-partilha">
       <h3>Gerir este evento ${evento.estado === 'concluido' ? '<span class="etiqueta et-tipo">Concluído</span>' : '<span class="etiqueta et-preco">Aberto</span>'}</h3>
+      ${evento.prazoVotacao ? `<div class="modal-legenda" style="margin:-4px 0 12px${prazoExpirado(evento)?';color:#A83232;font-weight:700':''}">⏱️ ${prazoExpirado(evento) ? 'Prazo para votar terminou a' : 'Prazo para votar:'} ${formatarPrazoPT(evento.prazoVotacao)}</div>` : ''}
       <button type="button" class="btn-secundario" data-acao="ir-procurar-mais" style="width:100%;margin-bottom:14px">+ Escolher / adicionar restaurantes</button>
+
+      <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Resultados até agora</label>
+      <div style="margin-bottom:16px">${blocoResultadosHTML(evento)}</div>
 
       <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:8px">Fotografias</label>
       <div class="grelha-fotos" id="grelhaFotos"><div class="vazio-pequeno">A carregar…</div></div>
       <label class="btn-adicionar-foto" for="inputFoto">+ Adicionar fotografia</label>
       <input type="file" id="inputFoto" accept="image/*" hidden>
 
-      <div id="listaRespostasGestao" style="margin-top:16px">${linhasResp}</div>
+      <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin:16px 0 8px">Todas as respostas</label>
+      <div id="listaRespostasGestao">${linhasResp}</div>
 
       ${semRestaurantes ? '' : `
       <details class="gestao">
@@ -1865,6 +1941,7 @@ function renderizarVotacao(){
   el.innerHTML = `
     <div class="painel-partilha">
       <h3>${votacaoAtual.titulo ? escapar(votacaoAtual.titulo) : 'Votação de restaurante'}</h3>
+      ${votacaoAtual.prazoVotacao ? `<div class="modal-legenda" style="margin:-6px 0 14px${prazoExpirado(votacaoAtual)?';color:#A83232;font-weight:700':''}">⏱️ ${prazoExpirado(votacaoAtual) ? 'Votação encerrada — o prazo era' : 'Vota até'} ${formatarPrazoPT(votacaoAtual.prazoVotacao)}</div>` : ''}
       <label>Link para partilhar</label>
       <div class="linha-link">
         <input type="text" readonly value="${escapar(link)}" id="votoLinkInput">
@@ -1913,7 +1990,7 @@ function renderizarVotacao(){
       ${blocoDatas}
 
       <div id="votoErro" class="voto-erro" hidden></div>
-      <button type="button" id="btnEnviarVoto" data-acao="enviar-voto" ${semRestaurantes?'disabled':''}>Enviar o meu voto</button>
+      <button type="button" id="btnEnviarVoto" data-acao="enviar-voto" ${semRestaurantes || prazoExpirado(votacaoAtual) ? 'disabled' : ''}>${prazoExpirado(votacaoAtual) ? 'Votação encerrada' : 'Enviar o meu voto'}</button>
 
       <div id="votoConfirmacao"></div>
     </div>
@@ -2134,6 +2211,7 @@ async function onCliqueVotacao(ev){
   }
 
   if(acao === 'enviar-voto'){
+    if(prazoExpirado(votacaoAtual)){ alert('O prazo para votar já terminou.'); return; }
     const nome = $('votoNome').value.trim();
     const email = $('votoEmail').value.trim();
     const erroEl = $('votoErro');
@@ -2264,7 +2342,7 @@ function onCliquePreferencias(ev){
     if(evt){
       votacaoAtual = {
         id: evt.id, titulo: evt.titulo, organizadorNome: evt.organizadorNome, organizadorEmail: evt.organizadorEmail,
-        criadoEm: evt.criadoEm, restaurantes: evt.restaurantes, datas: evt.datas, participantesConhecidos: evt.participantesConhecidos
+        criadoEm: evt.criadoEm, restaurantes: evt.restaurantes, datas: evt.datas, prazoVotacao: evt.prazoVotacao, participantesConhecidos: evt.participantesConhecidos
       };
       renderizarVotacao();
       mudarAba('votacao');
