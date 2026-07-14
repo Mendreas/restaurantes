@@ -493,6 +493,8 @@ input[type=file]{font:inherit;font-size:.85rem}
   <button type="button" class="lightbox-nav seguinte" id="lbSeguinte" aria-label="Foto seguinte">›</button>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.0.0/jspdf.umd.min.js"></script>
@@ -864,7 +866,7 @@ function alternarSelecao(r, btn){
     alert('Cria ou escolhe um evento em Início antes de adicionares restaurantes.');
     return;
   }
-  if(!obterEvento(votacaoAtual.id)){
+  if(!souOrganizadorDeste(votacaoAtual.id)){
     alert('Este evento não foi criado neste dispositivo — não é possível editar os restaurantes aqui.');
     return;
   }
@@ -962,9 +964,73 @@ function guardarEvento(evento){
   const i = lista.findIndex(e => e.id === evento.id);
   if(i >= 0) lista[i] = evento; else lista.unshift(evento);
   guardarEventos(lista);
+  sincronizarEventoOnline(evento);
 }
 function obterEvento(id){ return obterEventos().find(e => e.id === id) || null; }
 function removerEvento(id){ guardarEventos(obterEventos().filter(e => e.id !== id)); }
+
+// ===================== FIRESTORE (dados partilhados online) =====================
+// Sempre que um evento é guardado localmente, também é enviado para o Firestore,
+// para que todos os que abrirem o link vejam os mesmos dados atualizados.
+// Se o Firebase não estiver disponível (ex.: sem rede), a app continua a
+// funcionar apenas com os dados locais, sem quebrar nada.
+const firebaseConfig = {
+  apiKey: "AIzaSyDnF93qY_-zg9toCtdLyb5ylbkCjj0IV0Q",
+  authDomain: "mesa-marcada.firebaseapp.com",
+  projectId: "mesa-marcada",
+  storageBucket: "mesa-marcada.firebasestorage.app",
+  messagingSenderId: "653653283741",
+  appId: "1:653653283741:web:81a83672f68b5b28b15574"
+};
+let dbFirestore = null;
+try{
+  if(window.firebase){
+    firebase.initializeApp(firebaseConfig);
+    dbFirestore = firebase.firestore();
+  }
+}catch(e){ console.error('Firebase indisponível, a app continua a funcionar apenas localmente:', e); }
+
+async function sincronizarEventoOnline(evento){
+  if(!dbFirestore) return;
+  try{ await dbFirestore.collection('eventos').doc(evento.id).set(evento); }
+  catch(e){ console.error('Não foi possível sincronizar este evento online:', e); }
+}
+
+async function obterEventoOnline(id){
+  if(!dbFirestore) return null;
+  try{
+    const doc = await dbFirestore.collection('eventos').doc(id).get();
+    return doc.exists ? doc.data() : null;
+  }catch(e){ console.error('Não foi possível obter dados online:', e); return null; }
+}
+
+// Vai buscar a versão mais recente de um evento (online, se possível; local como
+// reserva) e atualiza a cópia local para refletir o que está online.
+async function carregarEventoMaisRecente(id){
+  const online = await obterEventoOnline(id);
+  if(online){
+    const lista = obterEventos();
+    const i = lista.findIndex(e => e.id === id);
+    if(i >= 0) lista[i] = online; else lista.unshift(online);
+    guardarEventos(lista);
+    return online;
+  }
+  return obterEvento(id);
+}
+
+// Marca este dispositivo como "dono" de um evento (foi aqui que foi criado),
+// separado da simples existência de uma cópia local em cache.
+const CHAVE_MEUS_EVENTOS = 'mesaMarcada_meusEventosIds_v1';
+function marcarComoMeuEvento(id){
+  try{
+    const lista = JSON.parse(localStorage.getItem(CHAVE_MEUS_EVENTOS) || '[]');
+    if(!lista.includes(id)){ lista.push(id); localStorage.setItem(CHAVE_MEUS_EVENTOS, JSON.stringify(lista)); }
+  }catch(e){ /* ignora */ }
+}
+function souOrganizadorDeste(id){
+  try{ return JSON.parse(localStorage.getItem(CHAVE_MEUS_EVENTOS) || '[]').includes(id); }
+  catch(e){ return false; }
+}
 
 function mesclarContactos(...listas){
   const mapa = new Map();
@@ -1284,6 +1350,7 @@ $('mvCriar').addEventListener('click', () => {
     criadoEm: votacaoAtual.criadoEm, restaurantes: [], datas, prazoVotacao,
     participantesConhecidos: participantes, respostas: [], estado: 'aberto', resultadoFinal: null
   });
+  marcarComoMeuEvento(idEvento);
 
   location.hash = 'v=' + paraBase64Url(votacaoAtual);
   fecharModalVotacao();
@@ -1378,6 +1445,7 @@ $('epGuardar').addEventListener('click', () => {
     resultadoFinal: { restauranteNome: nomeLocal, morada: moradaLocal || null, data, hora }
   };
   guardarEvento(eventoPassado);
+  marcarComoMeuEvento(idEvento);
 
   votacaoAtual = {
     id: idEvento, titulo: eventoPassado.titulo, organizadorNome: eventoPassado.organizadorNome,
@@ -1469,10 +1537,10 @@ function renderizarInicio(){
   $('btnEventoPassado').addEventListener('click', abrirModalEventoPassado);
 }
 
-function onCliqueInicio(ev){
+async function onCliqueInicio(ev){
   const alvo = ev.target.closest('[data-acao="ir-para-evento"]');
   if(!alvo) return;
-  const evt = obterEvento(alvo.dataset.id);
+  const evt = await carregarEventoMaisRecente(alvo.dataset.id);
   if(evt){
     votacaoAtual = {
       id: evt.id, titulo: evt.titulo, organizadorNome: evt.organizadorNome, organizadorEmail: evt.organizadorEmail,
@@ -1522,10 +1590,10 @@ function renderizarEventos(){
   el.onclick = onCliqueEventos;
 }
 
-function onCliqueEventos(ev){
+async function onCliqueEventos(ev){
   const alvo = ev.target.closest('[data-acao="ver-evento-modal"]');
   if(!alvo) return;
-  const evt = obterEvento(alvo.dataset.id);
+  const evt = await carregarEventoMaisRecente(alvo.dataset.id);
   if(evt) abrirModalDetalheEvento(evt);
 }
 
@@ -1919,7 +1987,7 @@ function renderizarVotacao(){
 
   const link = linkPartilhavel(votacaoAtual);
   const temVariasDatas = votacaoAtual.datas.length > 1;
-  const eventoLocal = votacaoAtual.id ? obterEvento(votacaoAtual.id) : null;
+  const eventoLocal = (votacaoAtual.id && souOrganizadorDeste(votacaoAtual.id)) ? obterEvento(votacaoAtual.id) : null;
   const semRestaurantes = votacaoAtual.restaurantes.length === 0;
 
   const blocoRestaurantes = semRestaurantes
@@ -2065,7 +2133,7 @@ function renderizarVotacao(){
 async function onEscolherFoto(ev){
   const ficheiro = ev.target.files[0];
   if(!ficheiro) return;
-  if(!votacaoAtual || !votacaoAtual.id) return;
+  if(!votacaoAtual || !votacaoAtual.id || !souOrganizadorDeste(votacaoAtual.id)) return;
   const eventoLocal = obterEvento(votacaoAtual.id);
   if(!eventoLocal){ alert('Este evento não foi criado neste dispositivo.'); ev.target.value = ''; return; }
 
@@ -2347,7 +2415,7 @@ function renderizarPreferencias(){
   $('importarFicheiro').addEventListener('change', onImportarFicheiro);
 }
 
-function onCliquePreferencias(ev){
+async function onCliquePreferencias(ev){
   const alvo = ev.target.closest('[data-acao]');
   if(!alvo) return;
   const acao = alvo.dataset.acao;
@@ -2369,7 +2437,7 @@ function onCliquePreferencias(ev){
   }
 
   if(acao === 'pref-ver-evento'){
-    const evt = obterEvento(alvo.dataset.id);
+    const evt = await carregarEventoMaisRecente(alvo.dataset.id);
     if(evt){
       votacaoAtual = {
         id: evt.id, titulo: evt.titulo, organizadorNome: evt.organizadorNome, organizadorEmail: evt.organizadorEmail,
@@ -2542,6 +2610,18 @@ function carregarVotacaoDoHash(){
     votacaoAtual = deBase64Url(decodeURIComponent(m[1]));
     renderizarVotacao();
     mudarAba('votacao');
+    if(votacaoAtual.id){
+      carregarEventoMaisRecente(votacaoAtual.id).then(fresco => {
+        if(fresco){
+          votacaoAtual = {
+            id: fresco.id, titulo: fresco.titulo, organizadorNome: fresco.organizadorNome, organizadorEmail: fresco.organizadorEmail,
+            criadoEm: fresco.criadoEm, restaurantes: fresco.restaurantes, datas: fresco.datas, prazoVotacao: fresco.prazoVotacao,
+            participantesConhecidos: fresco.participantesConhecidos
+          };
+          renderizarVotacao();
+        }
+      });
+    }
     return true;
   }catch(e){
     console.error('Link de votação inválido:', e);
