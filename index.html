@@ -967,7 +967,15 @@ function guardarEvento(evento){
   sincronizarEventoOnline(evento);
 }
 function obterEvento(id){ return obterEventos().find(e => e.id === id) || null; }
-function removerEvento(id){ guardarEventos(obterEventos().filter(e => e.id !== id)); }
+function removerEvento(id){
+  guardarEventos(obterEventos().filter(e => e.id !== id));
+  removerEventoOnline(id);
+}
+async function removerEventoOnline(id){
+  if(!dbFirestore) return;
+  try{ await dbFirestore.collection('eventos').doc(id).delete(); }
+  catch(e){ console.error('Não foi possível remover este evento online:', e); }
+}
 
 // ===================== FIRESTORE (dados partilhados online) =====================
 // Sempre que um evento é guardado localmente, também é enviado para o Firestore,
@@ -1015,23 +1023,31 @@ async function sincronizarEventoOnline(evento){
 }
 
 async function obterEventoOnline(id){
-  if(!dbFirestore) return null;
+  if(!dbFirestore) return { ok:false, dados:null };
   try{
     const doc = await dbFirestore.collection('eventos').doc(id).get();
-    return doc.exists ? doc.data() : null;
-  }catch(e){ console.error('Não foi possível obter dados online:', e); return null; }
+    return { ok:true, dados: doc.exists ? doc.data() : null };
+  }catch(e){
+    console.error('Não foi possível obter dados online:', e);
+    return { ok:false, dados:null };
+  }
 }
 
-// Vai buscar a versão mais recente de um evento (online, se possível; local como
-// reserva) e atualiza a cópia local para refletir o que está online.
+// Vai buscar a versão mais recente de um evento. Se o Firestore confirmar que já
+// não existe (foi apagado noutro dispositivo), limpa também a cópia local — assim
+// cada browser se autocorrige sozinho da próxima vez que abre esse evento.
 async function carregarEventoMaisRecente(id){
-  const online = await obterEventoOnline(id);
-  if(online){
-    const lista = obterEventos();
-    const i = lista.findIndex(e => e.id === id);
-    if(i >= 0) lista[i] = online; else lista.unshift(online);
-    guardarEventos(lista);
-    return online;
+  const resultado = await obterEventoOnline(id);
+  if(resultado.ok){
+    if(resultado.dados){
+      const lista = obterEventos();
+      const i = lista.findIndex(e => e.id === id);
+      if(i >= 0) lista[i] = resultado.dados; else lista.unshift(resultado.dados);
+      guardarEventos(lista);
+      return resultado.dados;
+    }
+    guardarEventos(obterEventos().filter(e => e.id !== id));
+    return null;
   }
   return obterEvento(id);
 }
@@ -1566,6 +1582,9 @@ async function onCliqueInicio(ev){
     };
     renderizarVotacao();
     mudarAba('votacao');
+  }else{
+    alert('Este evento já não existe (foi apagado).');
+    renderizarInicio();
   }
 }
 
@@ -1613,6 +1632,7 @@ async function onCliqueEventos(ev){
   if(!alvo) return;
   const evt = await carregarEventoMaisRecente(alvo.dataset.id);
   if(evt) abrirModalDetalheEvento(evt);
+  else{ alert('Este evento já não existe (foi apagado).'); renderizarEventos(); }
 }
 
 async function abrirModalDetalheEvento(evento){
@@ -2465,6 +2485,9 @@ async function onCliquePreferencias(ev){
       };
       renderizarVotacao();
       mudarAba('votacao');
+    }else{
+      alert('Este evento já não existe (foi apagado).');
+      renderizarPreferencias();
     }
   }
 
@@ -2639,6 +2662,9 @@ function carregarVotacaoDoHash(){
             participantesConhecidos: fresco.participantesConhecidos
           };
           renderizarVotacao();
+        }else{
+          votacaoAtual = null;
+          $('votacaoConteudo').innerHTML = '<div class="votacao-vazio">Este evento já não existe — foi removido pelo organizador.</div>';
         }
       });
     }
