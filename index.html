@@ -1199,24 +1199,28 @@ async function removerFotoOnline(id){
 }
 
 async function obterFotosOnline(eventoId){
-  if(!dbFirestore) return [];
+  if(!dbFirestore) return { ok:false, erro:'sem ligação à base de dados online', fotos:[] };
   try{
     const snap = await dbFirestore.collection('fotos').where('eventoId', '==', eventoId).get();
     const fotos = [];
     snap.forEach(doc => fotos.push(doc.data()));
-    return fotos;
-  }catch(e){ console.error('Não foi possível obter fotos online:', e); return []; }
+    return { ok:true, erro:null, fotos };
+  }catch(e){
+    console.error('Não foi possível obter fotos online:', e);
+    return { ok:false, erro: (e.code || e.message || 'erro desconhecido'), fotos:[] };
+  }
 }
 
 // Junta as fotos guardadas neste dispositivo com as que estão online, sem duplicar.
 async function obterFotosCombinadas(eventoId){
-  const [locais, online] = await Promise.all([
+  const [locais, resultadoOnline] = await Promise.all([
     obterFotosDoEvento(eventoId).catch(() => []),
     obterFotosOnline(eventoId)
   ]);
   const mapa = new Map();
-  [...locais, ...online].forEach(f => mapa.set(f.id, f));
-  return [...mapa.values()].sort((a,b) => (a.criadoEm||'').localeCompare(b.criadoEm||''));
+  [...locais, ...resultadoOnline.fotos].forEach(f => mapa.set(f.id, f));
+  const fotos = [...mapa.values()].sort((a,b) => (a.criadoEm||'').localeCompare(b.criadoEm||''));
+  return { fotos, erroOnline: resultadoOnline.ok ? null : resultadoOnline.erro };
 }
 
 // Guarda o conjunto de fotos atualmente visível, para o visualizador em ecrã inteiro navegar entre elas
@@ -1234,9 +1238,11 @@ async function carregarFotosEvento(eventoId){
   const el = $('grelhaFotos');
   if(!el) return;
   try{
-    const fotos = await obterFotosCombinadas(eventoId);
+    const { fotos, erroOnline } = await obterFotosCombinadas(eventoId);
     fotosAtuaisLightbox = fotos;
-    el.innerHTML = fotos.length ? fotos.map(f => fotoItemHTML(f, true)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
+    let html = fotos.length ? fotos.map(f => fotoItemHTML(f, true)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
+    if(erroOnline) html += '<div class="vazio-pequeno" style="color:#A83232">⚠️ Não sincronizou fotos online: ' + escapar(erroOnline) + '</div>';
+    el.innerHTML = html;
   }catch(e){
     el.innerHTML = '<div class="vazio-pequeno">As fotografias não estão disponíveis neste navegador.</div>';
   }
@@ -1246,9 +1252,11 @@ async function carregarFotosModal(eventoId){
   const el = $('medFotos');
   if(!el) return;
   try{
-    const fotos = await obterFotosCombinadas(eventoId);
+    const { fotos, erroOnline } = await obterFotosCombinadas(eventoId);
     fotosAtuaisLightbox = fotos;
-    el.innerHTML = fotos.length ? fotos.map(f => fotoItemHTML(f, false)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
+    let html = fotos.length ? fotos.map(f => fotoItemHTML(f, false)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
+    if(erroOnline) html += '<div class="vazio-pequeno" style="color:#A83232">⚠️ ' + escapar(erroOnline) + '</div>';
+    el.innerHTML = html;
   }catch(e){
     el.innerHTML = '<div class="vazio-pequeno">As fotografias não estão disponíveis neste navegador.</div>';
   }
@@ -1258,9 +1266,11 @@ async function carregarFotosPublico(eventoId){
   const el = $('grelhaFotosPublica');
   if(!el) return;
   try{
-    const fotos = await obterFotosCombinadas(eventoId);
+    const { fotos, erroOnline } = await obterFotosCombinadas(eventoId);
     fotosAtuaisLightbox = fotos;
-    el.innerHTML = fotos.length ? fotos.map(f => fotoItemHTML(f, false)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
+    let html = fotos.length ? fotos.map(f => fotoItemHTML(f, false)).join('') : '<div class="vazio-pequeno">Ainda sem fotografias.</div>';
+    if(erroOnline) html += '<div class="vazio-pequeno" style="color:#A83232">⚠️ ' + escapar(erroOnline) + '</div>';
+    el.innerHTML = html;
   }catch(e){
     el.innerHTML = '<div class="vazio-pequeno">As fotografias não estão disponíveis neste navegador.</div>';
   }
@@ -1919,7 +1929,7 @@ async function gerarPdfEvento(evento){
   doc.text('Gerado por Mesa Marcada em ' + new Date().toLocaleString('pt-PT'), 14, 290);
 
   let fotos = [];
-  try{ fotos = await obterFotosCombinadas(evento.id); }catch(e){ fotos = []; }
+  try{ fotos = (await obterFotosCombinadas(evento.id)).fotos; }catch(e){ fotos = []; }
 
   if(fotos.length){
     const pagLargura = 210, margemLat = 14;
