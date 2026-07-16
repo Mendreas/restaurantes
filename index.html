@@ -40,7 +40,7 @@ header p{font-size:.9rem;opacity:.85}
 .contador-aba{background:var(--mostarda);color:var(--branco);font-size:.7rem;font-weight:700;padding:1px 7px;border-radius:20px;line-height:1.5}
 
 .filtros{background:var(--branco);border-bottom:1px solid var(--linha);padding:16px 24px}
-.filtros .inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1.4fr 1.4fr 1fr auto;gap:12px;align-items:end}
+.filtros .inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1.8fr 1fr 1.3fr 1.3fr 1fr 1.3fr auto;gap:12px;align-items:end}
 .campo label{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin-bottom:5px}
 .campo input,.campo select{width:100%;padding:10px 12px;border:1.5px solid var(--linha);border-radius:8px;font:inherit;font-size:.92rem;background:var(--branco);color:var(--tinta)}
 .campo input:focus,.campo select:focus{outline:2px solid var(--cobalto);outline-offset:1px;border-color:var(--cobalto)}
@@ -322,6 +322,15 @@ input[type=file]{font:inherit;font-size:.85rem}
           <option value="1">€ (económico)</option>
           <option value="2">€€ (moderado)</option>
           <option value="3">€€€ (elevado)</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="ordenar">Ordenar por</label>
+        <select id="ordenar">
+          <option value="distancia">Mais perto primeiro</option>
+          <option value="precoAsc">Preço: mais barato</option>
+          <option value="precoDesc">Preço: mais caro</option>
+          <option value="nome">Nome (A-Z)</option>
         </select>
       </div>
       <button id="btnProcurar">Procurar</button>
@@ -719,6 +728,7 @@ async function pesquisar(){
     const fCozinha = $('cozinha').value;
     const fTipo = $('tipo').value;
     const fPreco = $('preco').value ? +$('preco').value : null;
+    const ordem = $('ordenar').value;
 
     let filtrados = resultados;
     if(fCozinha){
@@ -732,10 +742,16 @@ async function pesquisar(){
     if(fTipo) filtrados = filtrados.filter(r => r.tipo === fTipo);
     if(fPreco) filtrados = filtrados.filter(r => r.preco === null || r.preco <= fPreco);
 
-    filtrados.sort((a,b) => a.dist - b.dist);
-    filtrados = filtrados.slice(0, 60);
+    if(ordem === 'precoAsc') filtrados.sort((a,b) => (a.preco ?? 99) - (b.preco ?? 99) || a.dist - b.dist);
+    else if(ordem === 'precoDesc') filtrados.sort((a,b) => (b.preco ?? -1) - (a.preco ?? -1) || a.dist - b.dist);
+    else if(ordem === 'nome') filtrados.sort((a,b) => a.nome.localeCompare(b.nome, 'pt'));
+    else filtrados.sort((a,b) => a.dist - b.dist);
 
-    desenhar(filtrados, geo, raio, resultados.length);
+    const totalAntesDoCorte = filtrados.length;
+    const LIMITE_RESULTADOS = 250;
+    filtrados = filtrados.slice(0, LIMITE_RESULTADOS);
+
+    desenhar(filtrados, geo, raio, resultados.length, totalAntesDoCorte);
   }catch(e){
     console.error(e);
     estado('<span class="erro">Erro ao obter dados: ' + escapar(e.message) + '.</span> <button type="button" id="btnTentarNovamente">Tentar novamente</button>');
@@ -759,7 +775,7 @@ function restauranteEstaNoEvento(id){
   return !!(votacaoAtual && votacaoAtual.restaurantes.some(x => x.id === id));
 }
 
-function desenhar(lista, geo, raio, totalBruto){
+function desenhar(lista, geo, raio, totalBruto, totalAntesDoCorte){
   limparMapa();
   listaAtual = lista;
   const el = $('lista');
@@ -781,7 +797,9 @@ function desenhar(lista, geo, raio, totalBruto){
 
   $('colunaBusca').hidden = false;
 
+  const foiCortado = totalAntesDoCorte && totalAntesDoCorte > lista.length;
   estado(lista.length + ' restaurante' + (lista.length>1?'s':'') + ' encontrados' +
+    (foiCortado ? ' <span class="aviso">Havia ' + totalAntesDoCorte + ' no total — a mostrar os ' + lista.length + ' primeiros pela ordenação escolhida. Reduz o raio ou usa filtros para refinar.</span>' : '') +
     ($('preco').value ? ' <span class="aviso">Nota: restaurantes sem preço registado no OpenStreetMap continuam visíveis, marcados como «preço s/ info».</span>' : ''));
 
   el.innerHTML = lista.map((r,i) => {
